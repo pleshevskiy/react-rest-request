@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "rootDir": "src",
+        "outDir": "target",
+        "module": "esnext",
+        "target": "es6",
+        "lib": ["dom", "es2020"],
+        "jsx": "react",
+        "moduleResolution": "node",
+        "pretty": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "allowSyntheticDefaultImports": true,
+        "declaration": true,
+    },
+    "include": [
+        "src/**/*"
+    ],
+}
