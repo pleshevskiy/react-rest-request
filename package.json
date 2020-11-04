@@ -29,7 +29,6 @@
   },
   "homepage": "https://github.com/pleshevskiy/react-rest-request#readme",
   "dependencies": {
-    "axios": "^0.20.0",
     "lodash.isequal": "^4.5.0",
     "react": "^17.0.1",
     "tiny-invariant": "^1.1.0"

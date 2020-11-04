@@ -15,9 +15,11 @@ npm install react-rest-request --save
 ```typescript
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Endpoint, Method, useRequest, RequestProvider } from 'react-rest-request';
+import { Client, Endpoint, Method, useRequest, RequestProvider } from 'react-rest-request';
 
-const BASE_API_URL = 'https://sampleapis.com/movies/api';
+const client = Client({
+    baseUrl: 'https://sampleapis.com/movies/api',
+});
 
 type Movie = Readonly<{
     id: number;
@@ -55,7 +57,7 @@ function App() {
 }
 
 ReactDOM.render(
-    <RequestProvider baseUrl={BASE_API_URL}>
+    <RequestProvider client={client}>
         <App />
     </RequestProvider>,
     document.getElementById('root'),

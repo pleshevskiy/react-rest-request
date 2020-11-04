@@ -2,7 +2,7 @@ import React from 'react';
 import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
 import { useClient } from './client-hook';
-import { Endpoint, Method } from './endpoint';
+import { Endpoint } from './endpoint';
 import { RequestAction, requestReducer, RequestState } from './reducer';
 import { useRequestContext } from './request-context';
 
@@ -34,8 +34,6 @@ export function useRequest<R = Record<string, any>, V = Record<string, any>, P =
             isCalled: false,
         }
     );
-
-    const variableParam = requestVariableParamByMethod(endpoint.method);
 
     const handler = React.useCallback(
         (handlerConfig?: RequestHandlerConfig<R, V, P>) => {
@@ -87,7 +85,7 @@ export function useRequest<R = Record<string, any>, V = Record<string, any>, P =
                     ...endpoint,
                     url: endpointUrl,
                     headers,
-                    [variableParam]: variables,
+                    variables,
                 })
                 .then(
                     (response) => {
@@ -103,15 +101,11 @@ export function useRequest<R = Record<string, any>, V = Record<string, any>, P =
                     }
                 );
         },
-        [state, config, client, endpoint, variableParam, defaultHeaders]
+        [state, config, client, endpoint, defaultHeaders]
     );
 
     return [
         handler,
         state,
     ];
-}
-
-function requestVariableParamByMethod(method: Method) {
-    return [Method.GET, Method.DELETE].includes(method) ? 'params' : 'data';
 }

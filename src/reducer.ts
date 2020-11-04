@@ -1,4 +1,4 @@
-import { AxiosResponse } from 'axios';
+import { ClientResponse } from './client';
 
 export type RequestState<R> = Readonly<{
     data: R | null;
@@ -11,8 +11,8 @@ export type RequestState<R> = Readonly<{
 
 export type RequestAction<R> =
     | { type: 'call', headers: Record<string, string>, variables: Record<string, any>, params?: Record<string, any> }
-    | { type: 'success', response: AxiosResponse<R> }
-    | { type: 'failure', response: AxiosResponse<R> }
+    | { type: 'success', response: ClientResponse<R> }
+    | { type: 'failure', response: ClientResponse<R> }
 
 export function requestReducer<R>(state: RequestState<R>, action: RequestAction<R>) {
     switch (action.type) {
