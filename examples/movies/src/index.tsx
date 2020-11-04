@@ -1,12 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { RequestProvider } from 'react-rest-request';
-import { BASE_API_URL } from './constants';
+import { RequestProvider, Client } from 'react-rest-request';
 import App from './app';
+
+const client = new Client({
+  baseUrl: 'https://sampleapis.com/movies/api',
+});
 
 ReactDOM.render(
   <React.StrictMode>
-    <RequestProvider baseUrl={BASE_API_URL}>
+    <RequestProvider client={client}>
       <App />
     </RequestProvider>
   </React.StrictMode>,
