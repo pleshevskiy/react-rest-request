@@ -9,6 +9,8 @@ export type RequestState<R> = Readonly<{
     prevParams?: Record<string, any>
 }>
 
+export type PublicRequestState<R> = Pick<RequestState<R>, 'data' | 'loading' | 'isCalled'>;
+
 export type RequestAction<R> =
     | { type: 'call', headers: Record<string, string>, variables: Record<string, any>, params?: Record<string, any> }
     | { type: 'success', response: ClientResponse<R> }
