@@ -13,9 +13,10 @@ export type RequestProps = {
     variables: Record<string, any> | FormData,
 }
 
-export type ClientResponse<Data extends Record<string, any>> = Readonly<Response & {
-    data: Data;
-}>
+export type ClientResponse<Data extends Record<string, any>> = Readonly<
+    Pick<Response, 'ok' | 'redirected' | 'status' | 'statusText' | 'type' | 'headers' | 'url'>
+    & { data: Data }
+>
 
 export class Client {
     constructor(private config: ClientConfig) {}
@@ -65,7 +66,25 @@ export class Client {
 
         return fetch(req)
             // TODO: need to check response headers and parse json only if content-type header is application/json
-            .then(res => Promise.all([res, res.json()]))
-            .then(([res, data]) => ({ ...res, data }));
+            .then(res => Promise.all([res, res.json(), false]))
+            .then(([res, data]) => {
+                return {
+                    ok: res.ok,
+                    redirected: res.redirected,
+                    status: res.status,
+                    statusText: res.statusText,
+                    type: res.type,
+                    headers: res.headers,
+                    url: res.url,
+                    data
+                };
+            })
+            .then((res) => {
+                if (!res.ok) {
+                    throw res;
+                }
+
+                return res;
+            });
     }
 }

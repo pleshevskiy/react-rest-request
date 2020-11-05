@@ -5,12 +5,14 @@ import { useClient } from './client-hook';
 import { Endpoint } from './endpoint';
 import { PublicRequestState, RequestAction, requestReducer, RequestState } from './reducer';
 import { useRequestContext } from './request-context';
+import { ClientResponse } from './client';
 
 export type LazyRequestConfig<R, V, P = void> = Readonly<{
     variables?: V;
     params?: P;
     headers?: Record<string, string>;
     onComplete?: (data: R) => unknown;
+    onFailure?: (res: ClientResponse<R>) => unknown;
 }>
 
 export type LazyRequestHandlerConfig<R, V, P> = Readonly<
@@ -77,6 +79,7 @@ export function useLazyRequest<R = Record<string, any>, V = Record<string, any>,
             }
 
             const onComplete = config?.onComplete ?? handlerConfig?.onComplete;
+            const onFailure = handlerConfig?.onFailure ?? config?.onFailure;
 
             dispatch({ type: 'call', headers, variables, params });
 
@@ -97,7 +100,10 @@ export function useLazyRequest<R = Record<string, any>, V = Record<string, any>,
                     },
                     (response) => {
                         dispatch({ type: 'failure', response });
-                        throw response;
+                        if (typeof onFailure === 'function') {
+                            onFailure(response);
+                        }
+                        return null;
                     }
                 );
         },
