@@ -78,7 +78,7 @@ export function useLazyRequest<R = Record<string, any>, V = Record<string, any>,
                 return Promise.resolve(state.data);
             }
 
-            const onComplete = config?.onComplete ?? handlerConfig?.onComplete;
+            const onComplete = handlerConfig?.onComplete ?? config?.onComplete;
             const onFailure = handlerConfig?.onFailure ?? config?.onFailure;
 
             dispatch({ type: 'call', headers, variables, params });
