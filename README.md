@@ -36,14 +36,7 @@ const MoviesEndpoint: Endpoint = {
 type MoviesResponse = Movie[];
 
 function App() {
-    const [movies, { data, loading }] = useRequest<MoviesResponse>(MoviesEndpoint);
-
-    React.useEffect(
-        () => {
-            movies();
-        },
-        [movies]
-    );
+    const { data, loading } = useRequest<MoviesResponse>(MoviesEndpoint);
 
     return !data ? (
         <div>{ loading ? 'Loading...' : 'Something went wrong' }</div>
