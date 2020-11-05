@@ -17,7 +17,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Client, Endpoint, Method, useRequest, RequestProvider } from 'react-rest-request';
 
-const client = Client({
+const client = new Client({
     baseUrl: 'https://sampleapis.com/movies/api',
 });
 
