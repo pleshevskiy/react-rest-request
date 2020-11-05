@@ -13,3 +13,13 @@ export const MoviesEndpoint: Endpoint = {
 };
 
 export type MoviesResponse = Movie[];
+
+
+export const MovieEndpoint: Endpoint<MovieParams> = {
+    method: Method.GET,
+    url: ({ id }) => `/action-adventure/${id}`,
+};
+
+export type MovieParams = Readonly<{ id: React.Key }>;
+
+export type MovieResponse = Movie[];
