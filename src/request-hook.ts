@@ -1,111 +1,35 @@
 import React from 'react';
 import invariant from 'tiny-invariant';
-import isEqual from 'lodash.isequal';
-import { useClient } from './client-hook';
-import { Endpoint } from './endpoint';
-import { RequestAction, requestReducer, RequestState } from './reducer';
-import { useRequestContext } from './request-context';
+import { Endpoint, Method } from './endpoint';
+import { LazyRequestConfig, useLazyRequest } from './lazy-request-hook';
 
-export type RequestConfig<R, V, P = void> = Readonly<{
-    variables?: V;
-    params?: P;
-    headers?: Record<string, string>;
-    onComplete?: (data: R) => unknown;
-}>
-
-export type RequestHandlerConfig<R, V, P> = Readonly<
-    RequestConfig<R, V, P>
-    & { force?: boolean }
+export type RequestConfig<R, V, P> = Readonly<
+    LazyRequestConfig<R, V, P>
+    & {
+        skip?: boolean,
+    }
 >
-
-export type RequestHandler<R, V, P> = (config?: RequestHandlerConfig<R, V, P>) => Promise<R | null>;
 
 export function useRequest<R = Record<string, any>, V = Record<string, any>, P = void>(
     endpoint: Endpoint<P>,
     config?: RequestConfig<R, V, P>,
-): [RequestHandler<R, V, P>, RequestState<R>] {
-    const [client] = useClient();
-    const { defaultHeaders } = useRequestContext();
-    const [state, dispatch] = React.useReducer<React.Reducer<RequestState<R>, RequestAction<R>>>(
-        requestReducer,
-        {
-            data: null,
-            loading: false,
-            isCalled: false,
-        }
+) {
+    invariant(
+        endpoint.method == Method.GET,
+        `You cannot use useRequest with ${endpoint.method} method`
     );
 
-    const handler = React.useCallback(
-        (handlerConfig?: RequestHandlerConfig<R, V, P>) => {
-            if (state?.loading) {
-                return Promise.resolve(null);
+    const [handler, state] = useLazyRequest(endpoint, config);
+    const skip = React.useMemo(() => config?.skip ?? false, [config]);
+
+    React.useEffect(
+        () => {
+            if (!skip) {
+                handler();
             }
-
-            let params: P | undefined;
-            let endpointUrl: string;
-            let isSameRequest = true;
-            if (typeof endpoint.url === 'function') {
-                params = handlerConfig?.params ?? config?.params;
-                invariant(params, 'Endpoind required params');
-
-                endpointUrl = endpoint.url(params);
-
-                isSameRequest = !!state?.prevParams && isEqual(state.prevParams, params);
-            } else {
-                endpointUrl = endpoint.url;
-            }
-
-            const variables = {
-                ...config?.variables,
-                ...handlerConfig?.variables,
-            };
-
-            const headers = {
-                ...defaultHeaders,
-                ...endpoint.headers,
-                ...config?.headers,
-                ...handlerConfig?.headers,
-            };
-
-            if (
-                isSameRequest
-                && state?.prevVariables && isEqual(state.prevVariables, variables)
-                && state?.prevHeaders && isEqual(state.prevHeaders, headers)
-                && !handlerConfig?.force
-            ) {
-                return Promise.resolve(state.data);
-            }
-
-            const onComplete = config?.onComplete ?? handlerConfig?.onComplete;
-
-            dispatch({ type: 'call', headers, variables, params });
-
-            return client
-                .request<R>({
-                    ...endpoint,
-                    url: endpointUrl,
-                    headers,
-                    variables,
-                })
-                .then(
-                    (response) => {
-                        dispatch({ type: 'success', response });
-                        if (typeof onComplete === 'function') {
-                            onComplete(response.data);
-                        }
-                        return response.data;
-                    },
-                    (response) => {
-                        dispatch({ type: 'failure', response });
-                        throw response;
-                    }
-                );
         },
-        [state, config, client, endpoint, defaultHeaders]
+        [skip, handler]
     );
 
-    return [
-        handler,
-        state,
-    ];
+    return state;
 }
