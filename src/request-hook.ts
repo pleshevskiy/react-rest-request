@@ -15,7 +15,7 @@ export function useRequest<R = Record<string, any>, V = Record<string, any>, P =
     config?: RequestConfig<R, V, P>,
 ) {
     invariant(
-        endpoint.method == Method.GET,
+        endpoint.method !== Method.DELETE,
         `You cannot use useRequest with ${endpoint.method} method`
     );
 
