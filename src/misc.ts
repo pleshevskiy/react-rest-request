@@ -5,29 +5,37 @@ export function isObject(val: any) {
 
 export function formDataFromObject(obj: Record<string, any>) {
     const formData = new FormData();
-    for (const [key, value] of Object.entries(obj)) {
-        if (Array.isArray(value)) {
-            value.forEach(val => formData.append(key, val));
-        } else if (isObject(value)) {
-            formData.set(key, JSON.stringify(value));
-        } else {
-            formData.set(key, value);
-        }
-    }
+    Object.entries(obj)
+        .filter(([_, value]) => value !== undefined)
+        .forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                value
+                    .filter(val => val !== undefined)
+                    .forEach(val => formData.append(key, val));
+            } else if (isObject(value)) {
+                formData.set(key, JSON.stringify(value));
+            } else {
+                formData.set(key, value);
+            }
+        });
 
     return formData;
 }
 
 export function urlSearchParamsFromObject(obj: Record<string, any>) {
     const searchParams = new URLSearchParams();
-    for (const [key, value] of Object.entries(obj)) {
-        if (Array.isArray(value)) {
-            const arrayKey = `${key}[]`;
-            value.forEach(val => searchParams.append(arrayKey, val));
-        } else {
-            searchParams.set(key, value);
-        }
-    }
+    Object.entries(obj)
+        .filter(([_, value]) => value !== undefined)
+        .forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                const arrayKey = `${key}[]`;
+                value
+                    .filter(val => val !== undefined)
+                    .forEach(val => searchParams.append(arrayKey, val));
+            } else {
+                searchParams.set(key, value);
+            }
+        });
 
     return searchParams;
 }
