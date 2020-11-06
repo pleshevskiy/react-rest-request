@@ -14,9 +14,10 @@
         "strict": true,
         "strictNullChecks": true,
         "allowSyntheticDefaultImports": true,
-        "declaration": true,
+        "declaration": true
     },
     "include": [
-        "src"
-    ],
+        "src",
+        "tests"
+    ]
 }
