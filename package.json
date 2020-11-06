@@ -22,7 +22,9 @@
     "rest",
     "request",
     "fetch",
-    "hook"
+    "hook",
+    "api",
+    "client"
   ],
   "author": "Dmitriy Pleshevskiy <dmitriy@ideascup.me>",
   "license": "MIT",
