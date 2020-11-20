@@ -28,7 +28,7 @@ type Movie = Readonly<{
     imdbId: string;
 }>
 
-const MoviesEndpoint: Endpoint = {
+const MoviesEndpoint: Endpoint<MoviesResponse, void> = {
     method: Method.GET,
     url: '/action-adventure',
 };
@@ -55,4 +55,35 @@ ReactDOM.render(
     </RequestProvider>,
     document.getElementById('root'),
 );
+```
+
+### Transform response
+
+If you have an endpoint that doesn't fit into your beautiful architecture
+with its response data, you can transform the response before it's written
+to the state.
+
+```typescript
+import { Endpoint, Method } from 'react-rest-request';
+
+export type Movie = Readonly<{
+    id: number;
+    title: string;
+    posterURL: string;
+    imdbId: string;
+}>
+
+export const MoviesEndpoint: Endpoint<MoviesResponse, void> = {
+    method: Method.GET,
+    url: '/action-adventure',
+    transformResponseData(data: Movie[]) {
+        return {
+            items: data,
+        }
+    }
+};
+
+export type MoviesResponse = {
+    items: Movie[],
+}
 ```

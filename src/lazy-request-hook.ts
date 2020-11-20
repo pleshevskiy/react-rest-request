@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
 import { useClient } from './client-hook';
@@ -6,6 +6,7 @@ import { Endpoint } from './endpoint';
 import { PublicRequestState, RequestAction, requestReducer, RequestState } from './reducer';
 import { useRequestContext } from './request-context';
 import { ClientResponse } from './client';
+import { isFunction } from './misc';
 
 export type LazyRequestConfig<R, V, P = void> = Readonly<{
     variables?: V;
@@ -23,7 +24,7 @@ export type LazyRequestHandlerConfig<R, V, P> = Readonly<
 export type RequestHandler<R, V, P> = (config?: LazyRequestHandlerConfig<R, V, P>) => Promise<R | null>;
 
 export function useLazyRequest<R = Record<string, any>, V = Record<string, any>, P = void>(
-    endpoint: Endpoint<P>,
+    endpoint: Endpoint<R, V, P>,
     config?: LazyRequestConfig<R, V, P>,
 ): [RequestHandler<R, V, P>, PublicRequestState<R>] {
     const [client] = useClient();
@@ -37,6 +38,15 @@ export function useLazyRequest<R = Record<string, any>, V = Record<string, any>,
         }
     );
 
+    const transformResponseData = useCallback(
+        (data: unknown): R => {
+            return isFunction(endpoint.transformResponseData) ?
+                endpoint.transformResponseData(data)
+                : data as R;
+        },
+        [endpoint]
+    );
+
     const handler = React.useCallback(
         (handlerConfig?: LazyRequestHandlerConfig<R, V, P>) => {
             if (state?.loading) {
@@ -46,7 +56,7 @@ export function useLazyRequest<R = Record<string, any>, V = Record<string, any>,
             let params: P | undefined;
             let endpointUrl: string;
             let isSameRequest = true;
-            if (typeof endpoint.url === 'function') {
+            if (isFunction(endpoint.url)) {
                 params = handlerConfig?.params ?? config?.params;
                 invariant(params, 'Endpoind required params');
 
@@ -89,25 +99,28 @@ export function useLazyRequest<R = Record<string, any>, V = Record<string, any>,
                     url: endpointUrl,
                     headers,
                     variables,
+                    transformResponseData,
                 })
                 .then(
                     (response) => {
                         dispatch({ type: 'success', response });
-                        if (typeof onComplete === 'function') {
+
+                        if (isFunction(onComplete)) {
                             onComplete(response.data);
                         }
+
                         return response.data;
                     },
                     (response) => {
                         dispatch({ type: 'failure', response });
-                        if (typeof onFailure === 'function') {
+                        if (isFunction(onFailure)) {
                             onFailure(response);
                         }
                         return null;
                     }
                 );
         },
-        [state, config, client, endpoint, defaultHeaders]
+        [state, config, client, endpoint, defaultHeaders, transformResponseData]
     );
 
     return [
