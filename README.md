@@ -87,3 +87,10 @@ export type MoviesResponse = {
     items: Movie[],
 }
 ```
+
+# License
+
+Released under the [MIT License].
+
+
+[MIT License]: https://github.com/pleshevskiy/react-rest-request/blob/master/LICENSE.md
