@@ -1,6 +1,10 @@
 
-export function isObject(val: any) {
+export function isObject(val: any): val is Record<string, unknown> {
     return Object.prototype.toString.call(val) === '[object Object]';
+}
+
+export function isFunction(val: any): val is (...args: any[]) => any {
+    return typeof val === 'function';
 }
 
 export function formDataFromObject(obj: Record<string, any>) {
