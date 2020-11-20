@@ -1,5 +1,6 @@
 
 export enum Method {
+    HEAD = 'HEAD',
     GET = 'GET',
     PUT = 'PUT',
     POST = 'POST',
