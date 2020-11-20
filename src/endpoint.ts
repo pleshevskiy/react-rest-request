@@ -8,8 +8,9 @@ export enum Method {
     DELETE = 'DELETE',
 }
 
-export type Endpoint<P = void> = Readonly<{
+export type Endpoint<R, V, P = void> = Readonly<{
     method: Method;
     url: string | ((params: P) => string);
     headers?: Record<string, string>;
+    transformResponseData?: (data: any) => R;
 }>

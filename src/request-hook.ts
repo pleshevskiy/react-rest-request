@@ -11,7 +11,7 @@ export type RequestConfig<R, V, P> = Readonly<
 >
 
 export function useRequest<R = Record<string, any>, V = Record<string, any>, P = void>(
-    endpoint: Endpoint<P>,
+    endpoint: Endpoint<R, V, P>,
     config?: RequestConfig<R, V, P>,
 ) {
     invariant(

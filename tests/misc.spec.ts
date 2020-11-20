@@ -1,4 +1,4 @@
-import { formDataFromObject, isObject, urlSearchParamsFromObject } from '../src/misc';
+import { formDataFromObject, isFunction, isObject, urlSearchParamsFromObject } from '../src/misc';
 
 describe('misc', () => {
     describe('isObject', () => {
@@ -16,6 +16,24 @@ describe('misc', () => {
             expect(isObject(undefined)).toBeFalsy();
             expect(isObject(NaN)).toBeFalsy();
             expect(isObject(Infinity)).toBeFalsy();
+        });
+    });
+
+    describe('isFunction', () => {
+        it('should return thruthy successfully', () => {
+            expect(isFunction(function () { return null; })).toBeTruthy();
+        });
+
+        it('should return falsy', () => {
+            expect(isFunction(1)).toBeFalsy();
+            expect(isFunction(true)).toBeFalsy();
+            expect(isFunction('')).toBeFalsy();
+            expect(isFunction([])).toBeFalsy();
+            expect(isFunction({})).toBeFalsy();
+            expect(isFunction(null)).toBeFalsy();
+            expect(isFunction(undefined)).toBeFalsy();
+            expect(isFunction(NaN)).toBeFalsy();
+            expect(isFunction(Infinity)).toBeFalsy();
         });
     });
 

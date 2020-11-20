@@ -1,16 +1,20 @@
 import invariant from 'tiny-invariant';
 import { Method } from './endpoint';
-import { formDataFromObject, urlSearchParamsFromObject } from './misc';
+import { formDataFromObject, isFunction, urlSearchParamsFromObject } from './misc';
 
 export type ClientConfig = {
     baseUrl: string,
 }
 
-export type RequestProps = {
+type PrepareRequestProps = {
     url: string,
     method: Method,
     headers: Record<string, string>,
     variables: Record<string, any> | FormData,
+}
+
+export type RequestProps<R> = PrepareRequestProps & {
+    transformResponseData?: (data: unknown) => R,
 }
 
 export type ClientResponse<Data extends Record<string, any>> = Readonly<
@@ -21,7 +25,7 @@ export type ClientResponse<Data extends Record<string, any>> = Readonly<
 export class Client {
     constructor(private config: ClientConfig) {}
 
-    private prepareRequest(props: RequestProps) {
+    private prepareRequest(props: PrepareRequestProps) {
         const requestCanContainBody = [Method.POST, Method.PATCH, Method.PUT].includes(props.method);
 
         const url = /https?:\/\//.test(props.url) ?
@@ -61,8 +65,13 @@ export class Client {
         });
     }
 
-    public request<Data extends Record<string, any>>(props: RequestProps): Promise<ClientResponse<Data>> {
-        const req = this.prepareRequest(props);
+    public request<Data extends Record<string, any>>(
+        {
+            transformResponseData,
+            ...restProps
+        }: RequestProps<Data>
+    ): Promise<ClientResponse<Data>> {
+        const req = this.prepareRequest(restProps);
 
         return fetch(req)
             // TODO: need to check response headers and parse json only if content-type header is application/json
@@ -76,7 +85,7 @@ export class Client {
                     type: res.type,
                     headers: res.headers,
                     url: res.url,
-                    data
+                    data: isFunction(transformResponseData) ? transformResponseData(data) : data,
                 };
             })
             .then((res) => {

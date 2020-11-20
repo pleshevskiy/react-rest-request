@@ -9,9 +9,9 @@ export function MoviesPage() {
 
     return !data ? (
         <div>{ loading ? 'Loading...' : 'Something went wrong' }</div>
-    ) : Array.isArray(data) ? (
+    ) : (
         <ul>
-            {data
+            {data.items
                 .filter(movie => !!movie.title)
                 .map(movie => (
                     <li key={movie.id}>
@@ -22,7 +22,7 @@ export function MoviesPage() {
                 <Link to='/9999'><span style={{color: 'red'}}>NOT EXIST</span></Link>
             </li>
         </ul>
-    ) : <div>{JSON.stringify(data)}</div>;
+    );
 }
 
 export function MoviePage() {
