@@ -25,12 +25,18 @@ export type ClientResponse<Data extends Record<string, any>> = Readonly<
 export class Client {
     constructor(private config: ClientConfig) {}
 
-    private prepareRequest(props: PrepareRequestProps) {
+    public prepareRequest(props: PrepareRequestProps) {
         const requestCanContainBody = [Method.POST, Method.PATCH, Method.PUT].includes(props.method);
 
-        const url = /https?:\/\//.test(props.url) ?
-            new URL(props.url)
-            : new URL(this.config.baseUrl + props.url);
+        const defaultBaseUrl = (window as Window | undefined)?.location.href;
+        const sourceUrl = /https?:\/\//.test(props.url) ?
+            props.url
+            : this.config.baseUrl + props.url;
+        if (!defaultBaseUrl && sourceUrl.startsWith('/')) {
+            throw new Error(`Invalid request method: ${sourceUrl}`);
+        }
+
+        const url = new URL(sourceUrl, defaultBaseUrl);
         if (!requestCanContainBody) {
             invariant(!(props.variables instanceof FormData), `Method ${props.method} cannot contain body`);
 
@@ -58,11 +64,14 @@ export class Client {
             undefined 
         );
 
-        return new Request(url.toString(), {
-            headers,
-            method: props.method,
-            body,
-        });
+        return new Request(
+            url.toString(),
+            {
+                headers,
+                method: props.method,
+                body,
+            }
+        );
     }
 
     public request<Data extends Record<string, any>>(
