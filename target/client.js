@@ -17,10 +17,16 @@ export class Client {
         this.config = config;
     }
     prepareRequest(props) {
+        var _a;
         const requestCanContainBody = [Method.POST, Method.PATCH, Method.PUT].includes(props.method);
-        const url = /https?:\/\//.test(props.url) ?
-            new URL(props.url)
-            : new URL(this.config.baseUrl + props.url);
+        const defaultBaseUrl = (_a = window) === null || _a === void 0 ? void 0 : _a.location.href;
+        const sourceUrl = /https?:\/\//.test(props.url) ?
+            props.url
+            : this.config.baseUrl + props.url;
+        if (!defaultBaseUrl && sourceUrl.startsWith('/')) {
+            throw new Error(`Invalid request method: ${sourceUrl}`);
+        }
+        const url = new URL(sourceUrl, defaultBaseUrl);
         if (!requestCanContainBody) {
             invariant(!(props.variables instanceof FormData), `Method ${props.method} cannot contain body`);
             url.search = urlSearchParamsFromObject(props.variables).toString();

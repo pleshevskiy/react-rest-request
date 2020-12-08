@@ -17,7 +17,7 @@ export declare type ClientResponse<Data extends Record<string, any>> = Readonly<
 export declare class Client {
     private config;
     constructor(config: ClientConfig);
-    private prepareRequest;
+    prepareRequest(props: PrepareRequestProps): Request;
     request<Data extends Record<string, any>>({ transformResponseData, ...restProps }: RequestProps<Data>): Promise<ClientResponse<Data>>;
 }
 export {};
