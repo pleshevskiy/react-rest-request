@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
 import { useClient } from './client-hook';
@@ -13,7 +13,8 @@ export function useLazyRequest(endpoint, config) {
         loading: false,
         isCalled: false,
     });
-    const transformResponseData = useCallback((data) => {
+    const [prevHandlerConfig, setPrevHandlerConfig] = React.useState(null);
+    const transformResponseData = React.useCallback((data) => {
         return isFunction(endpoint.transformResponseData) ?
             endpoint.transformResponseData(data)
             : data;
@@ -46,6 +47,7 @@ export function useLazyRequest(endpoint, config) {
         const onComplete = (_b = handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onComplete) !== null && _b !== void 0 ? _b : config === null || config === void 0 ? void 0 : config.onComplete;
         const onFailure = (_c = handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onFailure) !== null && _c !== void 0 ? _c : config === null || config === void 0 ? void 0 : config.onFailure;
         dispatch({ type: 'call', headers, variables, params });
+        setPrevHandlerConfig(handlerConfig !== null && handlerConfig !== void 0 ? handlerConfig : {});
         return client
             .request(Object.assign(Object.assign({}, endpoint), { url: endpointUrl, headers,
             variables,
@@ -64,12 +66,18 @@ export function useLazyRequest(endpoint, config) {
             return null;
         });
     }, [state, config, client, endpoint, defaultHeaders, transformResponseData]);
+    const refetch = React.useCallback(() => {
+        if (prevHandlerConfig != null) {
+            handler(Object.assign(Object.assign({}, prevHandlerConfig), { force: true }));
+        }
+    }, [handler, prevHandlerConfig]);
     return [
         handler,
         {
             data: state.data,
             loading: state.loading,
             isCalled: state.isCalled,
+            refetch,
         },
     ];
 }
