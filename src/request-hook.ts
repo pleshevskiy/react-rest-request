@@ -1,6 +1,6 @@
 import React from 'react';
 import invariant from 'tiny-invariant';
-import { Endpoint, Method } from './endpoint';
+import { Endpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables, Method } from './endpoint';
 import { LazyRequestConfig, useLazyRequest } from './lazy-request-hook';
 
 export type RequestConfig<R, V, P> = Readonly<
@@ -10,8 +10,13 @@ export type RequestConfig<R, V, P> = Readonly<
     }
 >
 
-export function useRequest<R = Record<string, any>, V = Record<string, any>, P = void>(
-    endpoint: Endpoint<R, V, P>,
+export function useRequest<
+    E extends Endpoint<R, V, P>,
+    R = ExtractEndpointResponse<E>,
+    V = ExtractEndpointVariables<E>,
+    P = ExtractEndpointParams<E>
+>(
+    endpoint: E,
     config?: RequestConfig<R, V, P>,
 ) {
     invariant(
