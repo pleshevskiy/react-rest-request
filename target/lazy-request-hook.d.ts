@@ -1,7 +1,7 @@
-import { Endpoint } from './endpoint';
+import { Endpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables } from './endpoint';
 import { PublicRequestState } from './reducer';
 import { ClientResponse } from './client';
-export declare type LazyRequestConfig<R, V, P = void> = Readonly<{
+export declare type LazyRequestConfig<R, V, P = never> = Readonly<{
     variables?: V;
     params?: P;
     headers?: Record<string, string>;
@@ -12,4 +12,4 @@ export declare type LazyRequestHandlerConfig<R, V, P> = Readonly<LazyRequestConf
     force?: boolean;
 }>;
 export declare type RequestHandler<R, V, P> = (config?: LazyRequestHandlerConfig<R, V, P>) => Promise<R | null>;
-export declare function useLazyRequest<R = Record<string, any>, V = Record<string, any>, P = void>(endpoint: Endpoint<R, V, P>, config?: LazyRequestConfig<R, V, P>): [RequestHandler<R, V, P>, PublicRequestState<R>];
+export declare function useLazyRequest<E extends Endpoint<R, V, P>, R = ExtractEndpointResponse<E>, V = ExtractEndpointVariables<E>, P = ExtractEndpointParams<E>>(endpoint: E, config?: LazyRequestConfig<R, V, P>): [RequestHandler<R, V, P>, PublicRequestState<R>];

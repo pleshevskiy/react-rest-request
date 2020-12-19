@@ -21,11 +21,11 @@ export type MoviesResponse = {
     items: Movie[],
 }
 
-export const MovieEndpoint: Endpoint<MovieResponse, void, MovieParams> = {
+export const MovieEndpoint: Endpoint<MovieResponse, never, MovieParams> = {
     method: Method.GET,
     url: ({ id }) => `/action-adventure/${id}`,
 };
 
 export type MovieParams = Readonly<{ id: React.Key }>;
 
-export type MovieResponse = Movie[];
+export type MovieResponse = Movie;

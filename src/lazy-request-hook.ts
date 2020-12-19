@@ -2,13 +2,13 @@ import React, { useCallback, useMemo } from 'react';
 import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
 import { useClient } from './client-hook';
-import { Endpoint } from './endpoint';
+import { Endpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables } from './endpoint';
 import { PublicRequestState, RequestAction, requestReducer, RequestState } from './reducer';
 import { useRequestContext } from './request-context';
 import { ClientResponse } from './client';
 import { isFunction } from './misc';
 
-export type LazyRequestConfig<R, V, P = void> = Readonly<{
+export type LazyRequestConfig<R, V, P = never> = Readonly<{
     variables?: V;
     params?: P;
     headers?: Record<string, string>;
@@ -23,8 +23,13 @@ export type LazyRequestHandlerConfig<R, V, P> = Readonly<
 
 export type RequestHandler<R, V, P> = (config?: LazyRequestHandlerConfig<R, V, P>) => Promise<R | null>;
 
-export function useLazyRequest<R = Record<string, any>, V = Record<string, any>, P = void>(
-    endpoint: Endpoint<R, V, P>,
+export function useLazyRequest<
+    E extends Endpoint<R, V, P>,
+    R = ExtractEndpointResponse<E>,
+    V = ExtractEndpointVariables<E>,
+    P = ExtractEndpointParams<E>
+>(
+    endpoint: E,
     config?: LazyRequestConfig<R, V, P>,
 ): [RequestHandler<R, V, P>, PublicRequestState<R>] {
     const [client] = useClient();

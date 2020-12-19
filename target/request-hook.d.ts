@@ -1,9 +1,9 @@
-import { Endpoint } from './endpoint';
+import { Endpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables } from './endpoint';
 import { LazyRequestConfig } from './lazy-request-hook';
 export declare type RequestConfig<R, V, P> = Readonly<LazyRequestConfig<R, V, P> & {
     skip?: boolean;
 }>;
-export declare function useRequest<R = Record<string, any>, V = Record<string, any>, P = void>(endpoint: Endpoint<R, V, P>, config?: RequestConfig<R, V, P>): Pick<Readonly<{
+export declare function useRequest<E extends Endpoint<R, V, P>, R = ExtractEndpointResponse<E>, V = ExtractEndpointVariables<E>, P = ExtractEndpointParams<E>>(endpoint: E, config?: RequestConfig<R, V, P>): Pick<Readonly<{
     data: R | null;
     loading: boolean;
     isCalled: boolean;

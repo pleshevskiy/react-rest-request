@@ -1,11 +1,11 @@
 import React from 'react';
 import { useRequest } from 'react-rest-request';
 import { Link, useParams } from 'react-router-dom';
-import { MovieEndpoint, MovieParams, MovieResponse, MoviesEndpoint, MoviesResponse } from './endpoint';
+import { MovieEndpoint, MoviesEndpoint } from './endpoint';
 
 
 export function MoviesPage() {
-    const { data, loading } = useRequest<MoviesResponse>(MoviesEndpoint);
+    const { data, loading } = useRequest(MoviesEndpoint);
 
     return !data ? (
         <div>{ loading ? 'Loading...' : 'Something went wrong' }</div>
@@ -27,7 +27,7 @@ export function MoviesPage() {
 
 export function MoviePage() {
     const params = useParams<{ id: string}>();
-    const { data, loading } = useRequest<MovieResponse, void, MovieParams>(
+    const { data, loading } = useRequest(
         MovieEndpoint,
         {
             params,
