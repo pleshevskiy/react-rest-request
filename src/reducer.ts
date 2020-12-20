@@ -1,20 +1,32 @@
 import { ClientResponse } from './client';
 
-export type RequestState<R> = Readonly<{
+export type PublicRequestState<R> = Readonly<{
     data: R | null;
     loading: boolean;
     isCalled: boolean;
+}>;
+
+export type RequestState<R> = PublicRequestState<R> & Readonly<{
     prevHeaders?: Record<string, string>;
     prevVariables?: Record<string, any>;
-    prevParams?: Record<string, any>
+    prevParams?: Record<string, any>;
 }>
 
-export type PublicRequestState<R> = Pick<RequestState<R>, 'data' | 'loading' | 'isCalled'>;
-
 export type RequestAction<R> =
-    | { type: 'call', headers: Record<string, string>, variables: Record<string, any>, params?: Record<string, any> }
-    | { type: 'success', response: ClientResponse<R> }
-    | { type: 'failure', response: ClientResponse<R> }
+    | {
+        type: 'call',
+        headers: Record<string, string>,
+        variables: Record<string, any>,
+        params?: Record<string, any>
+    }
+    | {
+        type: 'success',
+        response: ClientResponse<R>
+    }
+    | {
+        type: 'failure',
+        response: ClientResponse<R>
+    }
 
 export function requestReducer<R>(state: RequestState<R>, action: RequestAction<R>) {
     switch (action.type) {

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React from 'react';
 import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
 import { useClient } from './client-hook';
@@ -23,6 +23,10 @@ export type LazyRequestHandlerConfig<R, V, P> = Readonly<
 
 export type RequestHandler<R, V, P> = (config?: LazyRequestHandlerConfig<R, V, P>) => Promise<R | null>;
 
+export type RefetchRequestHandler = () => void;
+
+export type PublicRequestStateWithRefetch<R> = PublicRequestState<R> & { refetch: RefetchRequestHandler };
+
 export function useLazyRequest<
     E extends Endpoint<R, V, P>,
     R = ExtractEndpointResponse<E>,
@@ -31,7 +35,7 @@ export function useLazyRequest<
 >(
     endpoint: E,
     config?: LazyRequestConfig<R, V, P>,
-): [RequestHandler<R, V, P>, PublicRequestState<R>] {
+): [RequestHandler<R, V, P>, PublicRequestStateWithRefetch<R>] {
     const [client] = useClient();
     const { defaultHeaders } = useRequestContext();
     const [state, dispatch] = React.useReducer<React.Reducer<RequestState<R>, RequestAction<R>>>(
@@ -42,8 +46,9 @@ export function useLazyRequest<
             isCalled: false,
         }
     );
+    const [prevHandlerConfig, setPrevHandlerConfig] = React.useState<LazyRequestHandlerConfig<R, V, P> | null>(null);
 
-    const transformResponseData = useCallback(
+    const transformResponseData = React.useCallback(
         (data: unknown): R => {
             return isFunction(endpoint.transformResponseData) ?
                 endpoint.transformResponseData(data)
@@ -98,6 +103,8 @@ export function useLazyRequest<
 
             dispatch({ type: 'call', headers, variables, params });
 
+            setPrevHandlerConfig(handlerConfig ?? {});
+
             return client
                 .request<R>({
                     ...endpoint,
@@ -128,12 +135,25 @@ export function useLazyRequest<
         [state, config, client, endpoint, defaultHeaders, transformResponseData]
     );
 
+    const refetch = React.useCallback(
+        () => {
+            if (prevHandlerConfig != null) {
+                handler({
+                    ...prevHandlerConfig,
+                    force: true,
+                });
+            }
+        },
+        [handler, prevHandlerConfig]
+    );
+
     return [
         handler,
         {
             data: state.data,
             loading: state.loading,
             isCalled: state.isCalled,
+            refetch,
         },
     ];
 }

@@ -1,13 +1,14 @@
 import { ClientResponse } from './client';
-export declare type RequestState<R> = Readonly<{
+export declare type PublicRequestState<R> = Readonly<{
     data: R | null;
     loading: boolean;
     isCalled: boolean;
+}>;
+export declare type RequestState<R> = PublicRequestState<R> & Readonly<{
     prevHeaders?: Record<string, string>;
     prevVariables?: Record<string, any>;
     prevParams?: Record<string, any>;
 }>;
-export declare type PublicRequestState<R> = Pick<RequestState<R>, 'data' | 'loading' | 'isCalled'>;
 export declare type RequestAction<R> = {
     type: 'call';
     headers: Record<string, string>;

@@ -12,4 +12,8 @@ export declare type LazyRequestHandlerConfig<R, V, P> = Readonly<LazyRequestConf
     force?: boolean;
 }>;
 export declare type RequestHandler<R, V, P> = (config?: LazyRequestHandlerConfig<R, V, P>) => Promise<R | null>;
-export declare function useLazyRequest<E extends Endpoint<R, V, P>, R = ExtractEndpointResponse<E>, V = ExtractEndpointVariables<E>, P = ExtractEndpointParams<E>>(endpoint: E, config?: LazyRequestConfig<R, V, P>): [RequestHandler<R, V, P>, PublicRequestState<R>];
+export declare type RefetchRequestHandler = () => void;
+export declare type PublicRequestStateWithRefetch<R> = PublicRequestState<R> & {
+    refetch: RefetchRequestHandler;
+};
+export declare function useLazyRequest<E extends Endpoint<R, V, P>, R = ExtractEndpointResponse<E>, V = ExtractEndpointVariables<E>, P = ExtractEndpointParams<E>>(endpoint: E, config?: LazyRequestConfig<R, V, P>): [RequestHandler<R, V, P>, PublicRequestStateWithRefetch<R>];

@@ -6,7 +6,7 @@ export declare enum Method {
     PATCH = "PATCH",
     DELETE = "DELETE"
 }
-export declare type Endpoint<R, V, P = never> = Readonly<{
+export declare type Endpoint<R, _V, P = never> = Readonly<{
     method: Method;
     url: string | ((params: P) => string);
     headers?: Record<string, string>;
