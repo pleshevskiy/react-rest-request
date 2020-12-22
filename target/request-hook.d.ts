@@ -1,6 +1,6 @@
-import { Endpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables } from './endpoint';
-import { LazyRequestConfig } from './lazy-request-hook';
-export declare type RequestConfig<R, V, P> = Readonly<LazyRequestConfig<R, V, P> & {
+import { AnyEndpoint } from './endpoint';
+import { LazyRequestConfigFromEndpoint } from './lazy-request-hook';
+export declare type RequestConfigFromEndpoint<E extends AnyEndpoint> = Readonly<LazyRequestConfigFromEndpoint<E> & {
     skip?: boolean;
 }>;
-export declare function useRequest<E extends Endpoint<R, V, P>, R = ExtractEndpointResponse<E>, V = ExtractEndpointVariables<E>, P = ExtractEndpointParams<E>>(endpoint: E, config?: RequestConfig<R, V, P>): import("./lazy-request-hook").PublicRequestStateWithRefetch<R>;
+export declare function useRequest<E extends AnyEndpoint>(endpoint: E, config?: RequestConfigFromEndpoint<E>): import("./lazy-request-hook").PublicRequestStateWithRefetch<E>;
