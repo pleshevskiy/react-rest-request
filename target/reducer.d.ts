@@ -1,3 +1,4 @@
+/// <reference types="react" />
 import { ClientResponse } from './client';
 export declare type PublicRequestState<R> = Readonly<{
     data: R | null;
@@ -21,6 +22,7 @@ export declare type RequestAction<R> = {
     type: 'failure';
     response: ClientResponse<R>;
 };
+export declare type RequestReducer<R> = React.Reducer<RequestState<R>, RequestAction<R>>;
 export declare function requestReducer<R>(state: RequestState<R>, action: RequestAction<R>): {
     loading: boolean;
     isCalled: boolean;

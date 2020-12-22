@@ -28,6 +28,8 @@ export type RequestAction<R> =
         response: ClientResponse<R>
     }
 
+export type RequestReducer<R> = React.Reducer<RequestState<R>, RequestAction<R>>
+
 export function requestReducer<R>(state: RequestState<R>, action: RequestAction<R>) {
     switch (action.type) {
         case 'call': {
