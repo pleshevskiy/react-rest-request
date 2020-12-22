@@ -1,23 +1,18 @@
 import React from 'react';
 import invariant from 'tiny-invariant';
-import { Endpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables, Method } from './endpoint';
-import { LazyRequestConfig, useLazyRequest } from './lazy-request-hook';
+import { AnyEndpoint, Method } from './endpoint';
+import { LazyRequestConfigFromEndpoint, useLazyRequest } from './lazy-request-hook';
 
-export type RequestConfig<R, V, P> = Readonly<
-    LazyRequestConfig<R, V, P>
+export type RequestConfigFromEndpoint<E extends AnyEndpoint> = Readonly<
+    LazyRequestConfigFromEndpoint<E>
     & {
         skip?: boolean,
     }
 >
 
-export function useRequest<
-    E extends Endpoint<R, V, P>,
-    R = ExtractEndpointResponse<E>,
-    V = ExtractEndpointVariables<E>,
-    P = ExtractEndpointParams<E>
->(
+export function useRequest<E extends AnyEndpoint>(
     endpoint: E,
-    config?: RequestConfig<R, V, P>,
+    config?: RequestConfigFromEndpoint<E>,
 ) {
     invariant(
         endpoint.method !== Method.DELETE,

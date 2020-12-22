@@ -2,13 +2,13 @@ import React from 'react';
 import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
 import { useClient } from './client-hook';
-import { Endpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables } from './endpoint';
-import { PublicRequestState, RequestAction, requestReducer, RequestState } from './reducer';
+import { AnyEndpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables } from './endpoint';
+import { PublicRequestState, RequestReducer, requestReducer } from './reducer';
 import { useRequestContext } from './request-context';
 import { ClientResponse } from './client';
 import { isFunction } from './misc';
 
-export type LazyRequestConfig<R, V, P = never> = Readonly<{
+export type LazyRequestConfig<R, V, P> = Readonly<{
     variables?: V;
     params?: P;
     headers?: Record<string, string>;
@@ -16,29 +16,33 @@ export type LazyRequestConfig<R, V, P = never> = Readonly<{
     onFailure?: (res: ClientResponse<R>) => unknown;
 }>
 
-export type LazyRequestHandlerConfig<R, V, P> = Readonly<
-    LazyRequestConfig<R, V, P>
+export type LazyRequestConfigFromEndpoint<E extends AnyEndpoint> = LazyRequestConfig<
+    ExtractEndpointResponse<E>,
+    ExtractEndpointVariables<E>,
+    ExtractEndpointParams<E>
+>;
+
+export type LazyRequestHandlerConfig<E extends AnyEndpoint> = Readonly<
+    LazyRequestConfigFromEndpoint<E>
     & { force?: boolean }
 >
 
-export type RequestHandler<R, V, P> = (config?: LazyRequestHandlerConfig<R, V, P>) => Promise<R | null>;
+export type RequestHandler<E extends AnyEndpoint> =
+    (config?: LazyRequestHandlerConfig<E>) => Promise<ExtractEndpointResponse<E> | null>;
 
 export type RefetchRequestHandler = () => void;
 
-export type PublicRequestStateWithRefetch<R> = PublicRequestState<R> & { refetch: RefetchRequestHandler };
+export type PublicRequestStateWithRefetch<E extends AnyEndpoint> =
+    PublicRequestState<ExtractEndpointResponse<E>>
+    & { refetch: RefetchRequestHandler };
 
-export function useLazyRequest<
-    E extends Endpoint<R, V, P>,
-    R = ExtractEndpointResponse<E>,
-    V = ExtractEndpointVariables<E>,
-    P = ExtractEndpointParams<E>
->(
+export function useLazyRequest<E extends AnyEndpoint>(
     endpoint: E,
-    config?: LazyRequestConfig<R, V, P>,
-): [RequestHandler<R, V, P>, PublicRequestStateWithRefetch<R>] {
+    config?: LazyRequestConfigFromEndpoint<E>,
+): [RequestHandler<E>, PublicRequestStateWithRefetch<E>] {
     const [client] = useClient();
     const { defaultHeaders } = useRequestContext();
-    const [state, dispatch] = React.useReducer<React.Reducer<RequestState<R>, RequestAction<R>>>(
+    const [state, dispatch] = React.useReducer<RequestReducer<ExtractEndpointResponse<E>>>(
         requestReducer,
         {
             data: null,
@@ -46,24 +50,24 @@ export function useLazyRequest<
             isCalled: false,
         }
     );
-    const [prevHandlerConfig, setPrevHandlerConfig] = React.useState<LazyRequestHandlerConfig<R, V, P> | null>(null);
+    const [prevHandlerConfig, setPrevHandlerConfig] = React.useState<LazyRequestHandlerConfig<E> | null>(null);
 
     const transformResponseData = React.useCallback(
-        (data: unknown): R => {
+        (data: unknown): ExtractEndpointResponse<E> => {
             return isFunction(endpoint.transformResponseData) ?
                 endpoint.transformResponseData(data)
-                : data as R;
+                : data as ExtractEndpointResponse<E>;
         },
         [endpoint]
     );
 
     const handler = React.useCallback(
-        (handlerConfig?: LazyRequestHandlerConfig<R, V, P>) => {
+        (handlerConfig?: LazyRequestHandlerConfig<E>) => {
             if (state?.loading) {
                 return Promise.resolve(null);
             }
 
-            let params: P | undefined;
+            let params: ExtractEndpointParams<E> | undefined;
             let endpointUrl: string;
             let isSameRequest = true;
             if (isFunction(endpoint.url)) {
@@ -106,7 +110,7 @@ export function useLazyRequest<
             setPrevHandlerConfig(handlerConfig ?? {});
 
             return client
-                .request<R>({
+                .request<ExtractEndpointResponse<E>>({
                     ...endpoint,
                     url: endpointUrl,
                     headers,
