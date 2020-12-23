@@ -17,12 +17,17 @@ export type RequestProps<R> = PrepareRequestProps & {
     transformResponseData?: (data: unknown) => R,
 }
 
-export type ClientResponse<Data extends Record<string, any>> = Readonly<
+export type ResponseWithError =
     Pick<Response, 'ok' | 'redirected' | 'status' | 'statusText' | 'type' | 'headers' | 'url'>
-    & { data: Data }
->
+    & Readonly<{ error?: Error, canceled?: boolean }>
+
+export type ClientResponse<Data extends Record<string, any>> =
+    ResponseWithError
+    & Readonly<{ data: Data }>
 
 export class Client {
+    private controller = new AbortController();
+
     constructor(private config: ClientConfig) {}
 
     public prepareRequest(props: PrepareRequestProps) {
@@ -82,10 +87,29 @@ export class Client {
     ): Promise<ClientResponse<Data>> {
         const req = this.prepareRequest(restProps);
 
-        return fetch(req)
+        return fetch(req, { signal: this.controller.signal })
             // TODO: need to check response headers and parse json only if content-type header is application/json
-            .then(res => Promise.all([res, res.json(), false]))
-            .then(([res, data]) => {
+            .then(
+                (res) => Promise.all([res, res.json()]),
+                (err) => {
+                    const canceled = err.name === 'AbortError';
+                    return Promise.all([
+                        {
+                            ok: false,
+                            redirected: false,
+                            status: canceled ? 499 : 400,
+                            statusText: canceled ? 'Client Closed Request' : err.toString(),
+                            type: 'basic',
+                            headers: {},
+                            url: req.url,
+                            error: err,
+                            canceled,
+                        } as ResponseWithError,
+                        {}
+                    ]);
+                }
+            )
+            .then(([res, data]): ClientResponse<Data> => {
                 return {
                     ok: res.ok,
                     redirected: res.redirected,
@@ -94,6 +118,8 @@ export class Client {
                     type: res.type,
                     headers: res.headers,
                     url: res.url,
+                    error: 'error' in res ? res.error : undefined,
+                    canceled: 'canceled' in res ? res.canceled : false,
                     data: isFunction(transformResponseData) ? transformResponseData(data) : data,
                 };
             })
@@ -104,5 +130,10 @@ export class Client {
 
                 return res;
             });
+    }
+
+    public cancelRequest() {
+        this.controller.abort();
+        this.controller = new AbortController();
     }
 }

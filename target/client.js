@@ -15,6 +15,7 @@ import { formDataFromObject, isFunction, urlSearchParamsFromObject } from './mis
 export class Client {
     constructor(config) {
         this.config = config;
+        this.controller = new AbortController();
     }
     prepareRequest(props) {
         var _a;
@@ -48,9 +49,25 @@ export class Client {
     request(_a) {
         var { transformResponseData } = _a, restProps = __rest(_a, ["transformResponseData"]);
         const req = this.prepareRequest(restProps);
-        return fetch(req)
+        return fetch(req, { signal: this.controller.signal })
             // TODO: need to check response headers and parse json only if content-type header is application/json
-            .then(res => Promise.all([res, res.json(), false]))
+            .then((res) => Promise.all([res, res.json()]), (err) => {
+            const canceled = err.name === 'AbortError';
+            return Promise.all([
+                {
+                    ok: false,
+                    redirected: false,
+                    status: canceled ? 499 : 400,
+                    statusText: canceled ? 'Client Closed Request' : err.toString(),
+                    type: 'basic',
+                    headers: {},
+                    url: req.url,
+                    error: err,
+                    canceled,
+                },
+                {}
+            ]);
+        })
             .then(([res, data]) => {
             return {
                 ok: res.ok,
@@ -60,6 +77,8 @@ export class Client {
                 type: res.type,
                 headers: res.headers,
                 url: res.url,
+                error: 'error' in res ? res.error : undefined,
+                canceled: 'canceled' in res ? res.canceled : false,
                 data: isFunction(transformResponseData) ? transformResponseData(data) : data,
             };
         })
@@ -69,5 +88,9 @@ export class Client {
             }
             return res;
         });
+    }
+    cancelRequest() {
+        this.controller.abort();
+        this.controller = new AbortController();
     }
 }

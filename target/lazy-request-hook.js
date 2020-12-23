@@ -21,7 +21,7 @@ export function useLazyRequest(endpoint, config) {
     }, [endpoint]);
     const handler = React.useCallback((handlerConfig) => {
         var _a, _b, _c;
-        if (state === null || state === void 0 ? void 0 : state.loading) {
+        if ((state === null || state === void 0 ? void 0 : state.loading) || (state === null || state === void 0 ? void 0 : state.isCanceled)) {
             return Promise.resolve(null);
         }
         let params;
@@ -38,7 +38,8 @@ export function useLazyRequest(endpoint, config) {
         }
         const variables = Object.assign(Object.assign({}, config === null || config === void 0 ? void 0 : config.variables), handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.variables);
         const headers = Object.assign(Object.assign(Object.assign(Object.assign({}, defaultHeaders), endpoint.headers), config === null || config === void 0 ? void 0 : config.headers), handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.headers);
-        if (isSameRequest
+        if (state.isCalled
+            && isSameRequest
             && (state === null || state === void 0 ? void 0 : state.prevVariables) && isEqual(state.prevVariables, variables)
             && (state === null || state === void 0 ? void 0 : state.prevHeaders) && isEqual(state.prevHeaders, headers)
             && !(handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.force)) {
@@ -60,7 +61,7 @@ export function useLazyRequest(endpoint, config) {
             return response.data;
         }, (response) => {
             dispatch({ type: 'failure', response });
-            if (isFunction(onFailure)) {
+            if (!response.canceled && isFunction(onFailure)) {
                 onFailure(response);
             }
             return null;
@@ -71,13 +72,22 @@ export function useLazyRequest(endpoint, config) {
             handler(Object.assign(Object.assign({}, prevHandlerConfig), { force: true }));
         }
     }, [handler, prevHandlerConfig]);
+    React.useEffect(() => {
+        return () => {
+            dispatch({ type: 'cancel' });
+            client.cancelRequest();
+        };
+    }, [client]);
     return [
         handler,
         {
             data: state.data,
             loading: state.loading,
             isCalled: state.isCalled,
+            isCanceled: state.isCanceled,
+            error: state.error,
             refetch,
+            cancel: client.cancelRequest.bind(client),
         },
     ];
 }
