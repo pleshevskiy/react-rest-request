@@ -57,6 +57,15 @@ ReactDOM.render(
 );
 ```
 
+# Features
+
+- [x] Automatic and lazy requests.
+- [x] Transform response data.
+- [x] Simple refetch of a previous request.
+- [x] Automatic and manual cancellation of the request.
+- [ ] Cache request responses.
+
+
 ### Transform response
 
 If you have an endpoint that doesn't fit into your beautiful architecture
