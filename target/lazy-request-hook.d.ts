@@ -13,8 +13,8 @@ export declare type LazyRequestHandlerConfig<E extends AnyEndpoint> = Readonly<L
     force?: boolean;
 }>;
 export declare type RequestHandler<E extends AnyEndpoint> = (config?: LazyRequestHandlerConfig<E>) => Promise<ExtractEndpointResponse<E> | null>;
-export declare type RefetchRequestHandler = () => void;
-export declare type PublicRequestStateWithRefetch<E extends AnyEndpoint> = PublicRequestState<ExtractEndpointResponse<E>> & {
-    refetch: RefetchRequestHandler;
+export declare type PublicRequestStateWithActions<E extends AnyEndpoint> = PublicRequestState<ExtractEndpointResponse<E>> & {
+    refetch: () => void;
+    cancel: () => void;
 };
-export declare function useLazyRequest<E extends AnyEndpoint>(endpoint: E, config?: LazyRequestConfigFromEndpoint<E>): [RequestHandler<E>, PublicRequestStateWithRefetch<E>];
+export declare function useLazyRequest<E extends AnyEndpoint>(endpoint: E, config?: LazyRequestConfigFromEndpoint<E>): [RequestHandler<E>, PublicRequestStateWithActions<E>];

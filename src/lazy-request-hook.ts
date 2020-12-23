@@ -30,16 +30,17 @@ export type LazyRequestHandlerConfig<E extends AnyEndpoint> = Readonly<
 export type RequestHandler<E extends AnyEndpoint> =
     (config?: LazyRequestHandlerConfig<E>) => Promise<ExtractEndpointResponse<E> | null>;
 
-export type RefetchRequestHandler = () => void;
-
-export type PublicRequestStateWithRefetch<E extends AnyEndpoint> =
+export type PublicRequestStateWithActions<E extends AnyEndpoint> =
     PublicRequestState<ExtractEndpointResponse<E>>
-    & { refetch: RefetchRequestHandler };
+    & {
+        refetch: () => void,
+        cancel: () => void,
+    };
 
 export function useLazyRequest<E extends AnyEndpoint>(
     endpoint: E,
     config?: LazyRequestConfigFromEndpoint<E>,
-): [RequestHandler<E>, PublicRequestStateWithRefetch<E>] {
+): [RequestHandler<E>, PublicRequestStateWithActions<E>] {
     const [client] = useClient();
     const { defaultHeaders } = useRequestContext();
     const [state, dispatch] = React.useReducer<RequestReducer<ExtractEndpointResponse<E>>>(
@@ -63,7 +64,7 @@ export function useLazyRequest<E extends AnyEndpoint>(
 
     const handler = React.useCallback(
         (handlerConfig?: LazyRequestHandlerConfig<E>) => {
-            if (state?.loading) {
+            if (state?.loading || state?.isCanceled) {
                 return Promise.resolve(null);
             }
 
@@ -94,7 +95,8 @@ export function useLazyRequest<E extends AnyEndpoint>(
             };
 
             if (
-                isSameRequest
+                state.isCalled
+                && isSameRequest
                 && state?.prevVariables && isEqual(state.prevVariables, variables)
                 && state?.prevHeaders && isEqual(state.prevHeaders, headers)
                 && !handlerConfig?.force
@@ -127,11 +129,13 @@ export function useLazyRequest<E extends AnyEndpoint>(
 
                         return response.data;
                     },
-                    (response) => {
+                    (response: ClientResponse<ExtractEndpointResponse<E>>) => {
                         dispatch({ type: 'failure', response });
-                        if (isFunction(onFailure)) {
+
+                        if (!response.canceled && isFunction(onFailure)) {
                             onFailure(response);
                         }
+
                         return null;
                     }
                 );
@@ -151,13 +155,26 @@ export function useLazyRequest<E extends AnyEndpoint>(
         [handler, prevHandlerConfig]
     );
 
+    React.useEffect(
+        () => {
+            return () => {
+                dispatch({ type: 'cancel' });
+                client.cancelRequest();
+            };
+        },
+        [client]
+    );
+
     return [
         handler,
         {
             data: state.data,
             loading: state.loading,
             isCalled: state.isCalled,
+            isCanceled: state.isCanceled,
+            error: state.error,
             refetch,
+            cancel: client.cancelRequest.bind(client),
         },
     ];
 }
