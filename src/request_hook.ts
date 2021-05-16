@@ -1,7 +1,7 @@
 import React from 'react';
 import invariant from 'tiny-invariant';
 import { AnyEndpoint, Method } from './endpoint';
-import { LazyRequestConfigFromEndpoint, useLazyRequest } from './lazy-request-hook';
+import { LazyRequestConfigFromEndpoint, useLazyRequest } from './lazy_request_hook';
 
 export type RequestConfigFromEndpoint<E extends AnyEndpoint> = Readonly<
     LazyRequestConfigFromEndpoint<E>

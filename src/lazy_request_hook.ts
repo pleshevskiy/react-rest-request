@@ -1,10 +1,10 @@
 import React from 'react';
 import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
-import { useClient } from './client-hook';
+import { useClient } from './client_hook';
 import { AnyEndpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables } from './endpoint';
 import { PublicRequestState, RequestReducer, requestReducer } from './reducer';
-import { useRequestContext } from './request-context';
+import { useRequestContext } from './request_context';
 import { ClientResponse } from './client';
 import { isFunction } from './misc';
 
