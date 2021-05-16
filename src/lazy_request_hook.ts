@@ -73,7 +73,7 @@ export function useLazyRequest<E extends AnyEndpoint>(
             let isSameRequest = true;
             if (isFunction(endpoint.url)) {
                 params = handlerConfig?.params ?? config?.params;
-                invariant(params, 'Endpoind required params');
+                invariant(params, 'Endpoint required params');
 
                 endpointUrl = endpoint.url(params);
 
