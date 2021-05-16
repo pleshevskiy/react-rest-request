@@ -2,11 +2,11 @@ import invariant from 'tiny-invariant';
 import { Method } from './endpoint';
 import { formDataFromObject, isFunction, urlSearchParamsFromObject } from './misc';
 
-export type ClientConfig = {
+export interface ClientConfig {
     baseUrl: string,
 }
 
-type PrepareRequestProps = {
+export interface PrepareRequestProps {
     url: string,
     method: Method,
     headers: Record<string, string>,
@@ -28,9 +28,9 @@ export type ClientResponse<Data extends Record<string, any>> =
 export class Client {
     private controller = new AbortController();
 
-    constructor(private config: ClientConfig) {}
+    constructor(private readonly config: ClientConfig) {}
 
-    public prepareRequest(props: PrepareRequestProps) {
+    prepareRequest(props: PrepareRequestProps) {
         const requestCanContainBody = [Method.POST, Method.PATCH, Method.PUT].includes(props.method);
 
         const defaultBaseUrl = (window as Window | undefined)?.location.href;
@@ -79,7 +79,7 @@ export class Client {
         );
     }
 
-    public request<Data extends Record<string, any>>(
+    request<Data extends Record<string, any>>(
         {
             transformResponseData,
             ...restProps
@@ -132,7 +132,7 @@ export class Client {
             });
     }
 
-    public cancelRequest() {
+    cancelRequest() {
         this.controller.abort();
         this.controller = new AbortController();
     }
