@@ -65,7 +65,7 @@ export class Client {
                     error: err,
                     canceled,
                 },
-                {}
+                canceled ? {} : err.json()
             ]);
         })
             .then(([res, data]) => {

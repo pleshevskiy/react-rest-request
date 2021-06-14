@@ -105,7 +105,7 @@ export class Client {
                             error: err,
                             canceled,
                         } as ResponseWithError,
-                        {}
+                        canceled ? {} : err.json()
                     ]);
                 }
             )

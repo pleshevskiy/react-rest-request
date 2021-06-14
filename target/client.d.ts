@@ -1,13 +1,13 @@
 import { Method } from './endpoint';
-export declare type ClientConfig = {
+export interface ClientConfig {
     baseUrl: string;
-};
-declare type PrepareRequestProps = {
+}
+export interface PrepareRequestProps {
     url: string;
     method: Method;
     headers: Record<string, string>;
     variables: Record<string, any> | FormData;
-};
+}
 export declare type RequestProps<R> = PrepareRequestProps & {
     transformResponseData?: (data: unknown) => R;
 };
@@ -19,11 +19,10 @@ export declare type ClientResponse<Data extends Record<string, any>> = ResponseW
     data: Data;
 }>;
 export declare class Client {
-    private config;
+    private readonly config;
     private controller;
     constructor(config: ClientConfig);
     prepareRequest(props: PrepareRequestProps): Request;
     request<Data extends Record<string, any>>({ transformResponseData, ...restProps }: RequestProps<Data>): Promise<ClientResponse<Data>>;
     cancelRequest(): void;
 }
-export {};
