@@ -1,6 +1,6 @@
 # react-rest-request
 
-Minimalistic REST API client for React inspired by Apollo.
+Minimalist REST API client for React inspired by Apollo.
 
 
 # Installation
