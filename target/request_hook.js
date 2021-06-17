@@ -8,7 +8,9 @@ export function useRequest(endpoint, config) {
     const skip = React.useMemo(() => { var _a; return (_a = config === null || config === void 0 ? void 0 : config.skip) !== null && _a !== void 0 ? _a : false; }, [config]);
     React.useEffect(() => {
         if (!skip) {
-            handler();
+            handler({
+                force: false,
+            });
         }
     }, [skip, handler]);
     return state;

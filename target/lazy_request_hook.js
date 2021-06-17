@@ -42,7 +42,7 @@ export function useLazyRequest(endpoint, config) {
             && isSameRequest
             && (state === null || state === void 0 ? void 0 : state.prevVariables) && isEqual(state.prevVariables, variables)
             && (state === null || state === void 0 ? void 0 : state.prevHeaders) && isEqual(state.prevHeaders, headers)
-            && !(handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.force)) {
+            && (handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.force) === false) {
             return Promise.resolve(state.data);
         }
         const onCompletes = [config === null || config === void 0 ? void 0 : config.onComplete, handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onComplete].filter(isFunction);

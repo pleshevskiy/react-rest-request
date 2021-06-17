@@ -25,7 +25,9 @@ export function useRequest<E extends AnyEndpoint>(
     React.useEffect(
         () => {
             if (!skip) {
-                handler();
+                handler({
+                    force: false,
+                });
             }
         },
         [skip, handler]

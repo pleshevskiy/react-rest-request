@@ -99,7 +99,7 @@ export function useLazyRequest<E extends AnyEndpoint>(
                 && isSameRequest
                 && state?.prevVariables && isEqual(state.prevVariables, variables)
                 && state?.prevHeaders && isEqual(state.prevHeaders, headers)
-                && !handlerConfig?.force
+                && handlerConfig?.force === false
             ) {
                 return Promise.resolve(state.data);
             }
