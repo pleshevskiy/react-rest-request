@@ -104,8 +104,8 @@ export function useLazyRequest<E extends AnyEndpoint>(
                 return Promise.resolve(state.data);
             }
 
-            const onComplete = handlerConfig?.onComplete ?? config?.onComplete;
-            const onFailure = handlerConfig?.onFailure ?? config?.onFailure;
+            const onCompletes = [config?.onComplete, handlerConfig?.onComplete].filter(isFunction);
+            const onFailures = [config?.onFailure, handlerConfig?.onFailure].filter(isFunction);
 
             dispatch({ type: 'call', headers, variables, params });
 
@@ -123,17 +123,15 @@ export function useLazyRequest<E extends AnyEndpoint>(
                     (response) => {
                         dispatch({ type: 'success', response });
 
-                        if (isFunction(onComplete)) {
-                            onComplete(response.data);
-                        }
+                        onCompletes.forEach(cb => cb(response.data));
 
                         return response.data;
                     },
                     (response: ClientResponse<ExtractEndpointResponse<E>>) => {
                         dispatch({ type: 'failure', response });
 
-                        if (!response.canceled && isFunction(onFailure)) {
-                            onFailure(response);
+                        if (!response.canceled) {
+                            onFailures.forEach(cb => cb(response));
                         }
 
                         return null;
@@ -172,7 +170,7 @@ export function useLazyRequest<E extends AnyEndpoint>(
             loading: state.loading,
             isCalled: state.isCalled,
             isCanceled: state.isCanceled,
-            error: state.error,
+            fetchError: state.fetchError,
             refetch,
             cancel: client.cancelRequest.bind(client),
         },

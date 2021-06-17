@@ -5,7 +5,8 @@ export type PublicRequestState<R> = Readonly<{
     loading: boolean;
     isCalled: boolean;
     isCanceled?: boolean;
-    error?: Error;
+    response?: ClientResponse<R>;
+    fetchError?: Error;
 }>;
 
 export type RequestState<R> = PublicRequestState<R> & Readonly<{
@@ -35,12 +36,13 @@ export type RequestAction<R> =
 
 export type RequestReducer<R> = React.Reducer<RequestState<R>, RequestAction<R>>
 
-export function requestReducer<R>(state: RequestState<R>, action: RequestAction<R>) {
+export function requestReducer<R>(state: RequestState<R>, action: RequestAction<R>): RequestState<R> {
     switch (action.type) {
         case 'call': {
             return {
                 ...state,
-                error: undefined,
+                response: undefined,
+                fetchError: undefined,
                 isCanceled: false,
                 loading: true,
                 isCalled: true,
@@ -53,6 +55,7 @@ export function requestReducer<R>(state: RequestState<R>, action: RequestAction<
             return {
                 ...state,
                 loading: false,
+                response: action.response,
                 data: action.response.data,
             };
         }
@@ -60,8 +63,9 @@ export function requestReducer<R>(state: RequestState<R>, action: RequestAction<
             return {
                 ...state,
                 loading: false,
+                response: action.response,
                 data: null,
-                error: action.response.error,
+                fetchError: action.response.error,
                 isCanceled: action.response.canceled,
             };
         }
@@ -69,7 +73,7 @@ export function requestReducer<R>(state: RequestState<R>, action: RequestAction<
             return {
                 ...state,
                 isCanceled: false,
-                error: undefined,
+                fetchError: undefined,
             };
         }
     }

@@ -20,7 +20,7 @@ export function useLazyRequest(endpoint, config) {
             : data;
     }, [endpoint]);
     const handler = React.useCallback((handlerConfig) => {
-        var _a, _b, _c;
+        var _a;
         if ((state === null || state === void 0 ? void 0 : state.loading) || (state === null || state === void 0 ? void 0 : state.isCanceled)) {
             return Promise.resolve(null);
         }
@@ -45,8 +45,8 @@ export function useLazyRequest(endpoint, config) {
             && !(handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.force)) {
             return Promise.resolve(state.data);
         }
-        const onComplete = (_b = handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onComplete) !== null && _b !== void 0 ? _b : config === null || config === void 0 ? void 0 : config.onComplete;
-        const onFailure = (_c = handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onFailure) !== null && _c !== void 0 ? _c : config === null || config === void 0 ? void 0 : config.onFailure;
+        const onCompletes = [config === null || config === void 0 ? void 0 : config.onComplete, handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onComplete].filter(isFunction);
+        const onFailures = [config === null || config === void 0 ? void 0 : config.onFailure, handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onFailure].filter(isFunction);
         dispatch({ type: 'call', headers, variables, params });
         setPrevHandlerConfig(handlerConfig !== null && handlerConfig !== void 0 ? handlerConfig : {});
         return client
@@ -55,14 +55,12 @@ export function useLazyRequest(endpoint, config) {
             transformResponseData }))
             .then((response) => {
             dispatch({ type: 'success', response });
-            if (isFunction(onComplete)) {
-                onComplete(response.data);
-            }
+            onCompletes.forEach(cb => cb(response.data));
             return response.data;
         }, (response) => {
             dispatch({ type: 'failure', response });
-            if (!response.canceled && isFunction(onFailure)) {
-                onFailure(response);
+            if (!response.canceled) {
+                onFailures.forEach(cb => cb(response));
             }
             return null;
         });
@@ -85,7 +83,7 @@ export function useLazyRequest(endpoint, config) {
             loading: state.loading,
             isCalled: state.isCalled,
             isCanceled: state.isCanceled,
-            error: state.error,
+            fetchError: state.fetchError,
             refetch,
             cancel: client.cancelRequest.bind(client),
         },
