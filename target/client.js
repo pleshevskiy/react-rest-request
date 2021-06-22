@@ -15,7 +15,6 @@ import { formDataFromObject, isFunction, urlSearchParamsFromObject } from './mis
 export class Client {
     constructor(config) {
         this.config = config;
-        this.controller = new AbortController();
     }
     prepareRequest(props) {
         var _a;
@@ -47,9 +46,9 @@ export class Client {
         });
     }
     request(_a) {
-        var { transformResponseData } = _a, restProps = __rest(_a, ["transformResponseData"]);
+        var { transformResponseData, abortSignal } = _a, restProps = __rest(_a, ["transformResponseData", "abortSignal"]);
         const req = this.prepareRequest(restProps);
-        return fetch(req, { signal: this.controller.signal })
+        return fetch(req, { signal: abortSignal })
             // TODO: need to check response headers and parse json only if content-type header is application/json
             .then((res) => Promise.all([res, res.json()]), (err) => {
             const canceled = err.name === 'AbortError';
@@ -88,9 +87,5 @@ export class Client {
             }
             return res;
         });
-    }
-    cancelRequest() {
-        this.controller.abort();
-        this.controller = new AbortController();
     }
 }

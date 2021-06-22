@@ -3,18 +3,19 @@ import { Method } from './endpoint';
 import { formDataFromObject, isFunction, urlSearchParamsFromObject } from './misc';
 
 export interface ClientConfig {
-    baseUrl: string,
+    readonly baseUrl: string,
 }
 
 export interface PrepareRequestProps {
-    url: string,
-    method: Method,
-    headers: Record<string, string>,
-    variables: Record<string, any> | FormData,
+    readonly url: string,
+    readonly method: Method,
+    readonly headers: Record<string, string>,
+    readonly variables: Record<string, any> | FormData,
 }
 
-export type RequestProps<R> = PrepareRequestProps & {
-    transformResponseData?: (data: unknown) => R,
+export interface RequestProps<R> extends PrepareRequestProps {
+    readonly transformResponseData?: (data: unknown) => R,
+    readonly abortSignal: AbortSignal,
 }
 
 export type ResponseWithError =
@@ -26,8 +27,6 @@ export type ClientResponse<Data extends Record<string, any>> =
     & Readonly<{ data: Data }>
 
 export class Client {
-    private controller = new AbortController();
-
     constructor(private readonly config: ClientConfig) {}
 
     prepareRequest(props: PrepareRequestProps) {
@@ -82,12 +81,13 @@ export class Client {
     request<Data extends Record<string, any>>(
         {
             transformResponseData,
+            abortSignal,
             ...restProps
         }: RequestProps<Data>
     ): Promise<ClientResponse<Data>> {
         const req = this.prepareRequest(restProps);
 
-        return fetch(req, { signal: this.controller.signal })
+        return fetch(req, { signal: abortSignal })
             // TODO: need to check response headers and parse json only if content-type header is application/json
             .then(
                 (res) => Promise.all([res, res.json()]),
@@ -130,10 +130,5 @@ export class Client {
 
                 return res;
             });
-    }
-
-    cancelRequest() {
-        this.controller.abort();
-        this.controller = new AbortController();
     }
 }

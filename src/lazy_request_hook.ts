@@ -53,6 +53,8 @@ export function useLazyRequest<E extends AnyEndpoint>(
     );
     const [prevHandlerConfig, setPrevHandlerConfig] = React.useState<LazyRequestHandlerConfig<E> | null>(null);
 
+    const abortControllerRef = React.useRef(new AbortController());
+
     const transformResponseData = React.useCallback(
         (data: unknown): ExtractEndpointResponse<E> => {
             return isFunction(endpoint.transformResponseData) ?
@@ -114,6 +116,7 @@ export function useLazyRequest<E extends AnyEndpoint>(
             return client
                 .request<ExtractEndpointResponse<E>>({
                     ...endpoint,
+                    abortSignal: abortControllerRef.current.signal,
                     url: endpointUrl,
                     headers,
                     variables,
@@ -141,7 +144,7 @@ export function useLazyRequest<E extends AnyEndpoint>(
         [state, config, client, endpoint, defaultHeaders, transformResponseData]
     );
 
-    const refetch = React.useCallback(
+    const refetchRequest = React.useCallback(
         () => {
             if (prevHandlerConfig != null) {
                 handler({
@@ -153,14 +156,15 @@ export function useLazyRequest<E extends AnyEndpoint>(
         [handler, prevHandlerConfig]
     );
 
+    const cancelRequest = React.useCallback(() => {
+        dispatch({ type: 'cancel' });
+        abortControllerRef.current.abort();
+        abortControllerRef.current = new AbortController();
+    }, []);
+
     React.useEffect(
-        () => {
-            return () => {
-                dispatch({ type: 'cancel' });
-                client.cancelRequest();
-            };
-        },
-        [client]
+        () => cancelRequest,
+        [cancelRequest]
     );
 
     return [
@@ -171,8 +175,8 @@ export function useLazyRequest<E extends AnyEndpoint>(
             isCalled: state.isCalled,
             isCanceled: state.isCanceled,
             fetchError: state.fetchError,
-            refetch,
-            cancel: client.cancelRequest.bind(client),
+            refetch: refetchRequest,
+            cancel: cancelRequest,
         },
     ];
 }
