@@ -3,10 +3,10 @@ import invariant from 'tiny-invariant';
 import { Client } from './client';
 
 
-export type RequestContextData = Readonly<{
-    client: Client;
-    defaultHeaders?: Record<string, string>;
-}>
+export interface RequestContextData {
+    readonly client: Client;
+    readonly defaultHeaders?: Record<string, string>;
+}
 
 const RequestContext = React.createContext<RequestContextData | null>(null);
 

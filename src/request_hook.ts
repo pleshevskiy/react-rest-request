@@ -1,21 +1,21 @@
 import React from 'react';
 import invariant from 'tiny-invariant';
-import { AnyEndpoint, Method } from './endpoint';
+import { AnyEndpoint, methodWithoutEffects } from './endpoint';
 import { LazyRequestConfigFromEndpoint, useLazyRequest } from './lazy_request_hook';
 
-export type RequestConfigFromEndpoint<E extends AnyEndpoint> = Readonly<
+export interface RequestConfigFromEndpoint<E extends AnyEndpoint> 
+extends
     LazyRequestConfigFromEndpoint<E>
-    & {
-        skip?: boolean,
-    }
->
+{
+    readonly skip?: boolean,
+}
 
 export function useRequest<E extends AnyEndpoint>(
     endpoint: E,
     config?: RequestConfigFromEndpoint<E>,
 ) {
     invariant(
-        endpoint.method !== Method.DELETE,
+        methodWithoutEffects(endpoint.method),
         `You cannot use useRequest with ${endpoint.method} method`
     );
 
@@ -25,9 +25,7 @@ export function useRequest<E extends AnyEndpoint>(
     React.useEffect(
         () => {
             if (!skip) {
-                handler({
-                    force: false,
-                });
+                handler();
             }
         },
         [skip, handler]

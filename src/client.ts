@@ -1,5 +1,5 @@
 import invariant from 'tiny-invariant';
-import { Method } from './endpoint';
+import { Method, methodCanContainBody } from './endpoint';
 import { formDataFromObject, isFunction, urlSearchParamsFromObject } from './misc';
 
 export interface ClientConfig {
@@ -18,19 +18,26 @@ export interface RequestProps<R> extends PrepareRequestProps {
     readonly abortSignal: AbortSignal,
 }
 
-export type ResponseWithError =
+export interface ResponseWithError
+extends
     Pick<Response, 'ok' | 'redirected' | 'status' | 'statusText' | 'type' | 'headers' | 'url'>
-    & Readonly<{ error?: Error, canceled?: boolean }>
+{
+    readonly error?: Error,
+    readonly canceled?: boolean,
+}
 
-export type ClientResponse<Data extends Record<string, any>> =
+export interface ClientResponse<Data extends Record<string, any>>
+extends
     ResponseWithError
-    & Readonly<{ data: Data }>
+{
+    readonly data: Data
+}
 
 export class Client {
     constructor(private readonly config: ClientConfig) {}
 
     prepareRequest(props: PrepareRequestProps) {
-        const requestCanContainBody = [Method.POST, Method.PATCH, Method.PUT].includes(props.method);
+        const requestCanContainBody = methodCanContainBody(props.method);
 
         const defaultBaseUrl = (window as Window | undefined)?.location.href;
         const sourceUrl = /https?:\/\//.test(props.url) ?

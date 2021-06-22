@@ -1,19 +1,19 @@
 import { ClientResponse } from './client';
 
-export type PublicRequestState<R> = Readonly<{
-    data: R | null;
-    loading: boolean;
-    isCalled: boolean;
-    isCanceled?: boolean;
-    response?: ClientResponse<R>;
-    fetchError?: Error;
-}>;
+export interface PublicRequestState<R> {
+    readonly data: R | null;
+    readonly loading: boolean;
+    readonly isCalled: boolean;
+    readonly isCanceled?: boolean;
+    readonly response?: ClientResponse<R>;
+    readonly fetchError?: Error;
+}
 
-export type RequestState<R> = PublicRequestState<R> & Readonly<{
-    prevHeaders?: Record<string, string>;
-    prevVariables?: Record<string, any>;
-    prevParams?: Record<string, any>;
-}>
+export interface RequestState<R> extends PublicRequestState<R> {
+    readonly prevHeaders?: Record<string, string>;
+    readonly prevVariables?: Record<string, any>;
+    readonly prevParams?: Record<string, any>;
+}
 
 export type RequestAction<R> =
     | {
@@ -72,7 +72,7 @@ export function requestReducer<R>(state: RequestState<R>, action: RequestAction<
         case 'cancel': {
             return {
                 ...state,
-                isCanceled: false,
+                isCanceled: true,
                 fetchError: undefined,
             };
         }

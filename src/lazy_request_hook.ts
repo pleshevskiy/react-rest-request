@@ -2,19 +2,19 @@ import React from 'react';
 import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
 import { useClient } from './client_hook';
-import { AnyEndpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables } from './endpoint';
+import { AnyEndpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables, methodWithoutEffects } from './endpoint';
 import { PublicRequestState, RequestReducer, requestReducer } from './reducer';
 import { useRequestContext } from './request_context';
 import { ClientResponse } from './client';
 import { isFunction } from './misc';
 
-export type LazyRequestConfig<R, V, P> = Readonly<{
-    variables?: V;
-    params?: P;
-    headers?: Record<string, string>;
-    onComplete?: (data: R) => unknown;
-    onFailure?: (res: ClientResponse<R>) => unknown;
-}>
+export interface LazyRequestConfig<R, V, P> {
+    readonly variables?: V;
+    readonly params?: P;
+    readonly headers?: Record<string, string>;
+    readonly onComplete?: (data: R) => unknown;
+    readonly onFailure?: (res: ClientResponse<R>) => unknown;
+}
 
 export type LazyRequestConfigFromEndpoint<E extends AnyEndpoint> = LazyRequestConfig<
     ExtractEndpointResponse<E>,
@@ -22,20 +22,23 @@ export type LazyRequestConfigFromEndpoint<E extends AnyEndpoint> = LazyRequestCo
     ExtractEndpointParams<E>
 >;
 
-export type LazyRequestHandlerConfig<E extends AnyEndpoint> = Readonly<
+export interface LazyRequestHandlerConfig<E extends AnyEndpoint>
+extends
     LazyRequestConfigFromEndpoint<E>
-    & { force?: boolean }
->
+{
+    readonly force?: boolean
+}
 
 export type RequestHandler<E extends AnyEndpoint> =
     (config?: LazyRequestHandlerConfig<E>) => Promise<ExtractEndpointResponse<E> | null>;
 
-export type PublicRequestStateWithActions<E extends AnyEndpoint> =
+export interface PublicRequestStateWithActions<E extends AnyEndpoint> 
+extends
     PublicRequestState<ExtractEndpointResponse<E>>
-    & {
-        refetch: () => void,
-        cancel: () => void,
-    };
+{
+    readonly refetch: () => void,
+    readonly cancel: () => void,
+};
 
 export function useLazyRequest<E extends AnyEndpoint>(
     endpoint: E,
@@ -96,13 +99,16 @@ export function useLazyRequest<E extends AnyEndpoint>(
                 ...handlerConfig?.headers,
             };
 
-            if (
-                state.isCalled
+            const shouldReturnCachedValue = (
+                methodWithoutEffects(endpoint.method)
+                && state.isCalled
                 && isSameRequest
                 && state?.prevVariables && isEqual(state.prevVariables, variables)
                 && state?.prevHeaders && isEqual(state.prevHeaders, headers)
-                && handlerConfig?.force === false
-            ) {
+                && !handlerConfig?.force
+            );
+
+            if (shouldReturnCachedValue) {
                 return Promise.resolve(state.data);
             }
 
@@ -147,10 +153,7 @@ export function useLazyRequest<E extends AnyEndpoint>(
     const refetchRequest = React.useCallback(
         () => {
             if (prevHandlerConfig != null) {
-                handler({
-                    ...prevHandlerConfig,
-                    force: true,
-                });
+                handler({ ...prevHandlerConfig });
             }
         },
         [handler, prevHandlerConfig]

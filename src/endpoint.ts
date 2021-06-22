@@ -8,6 +8,14 @@ export enum Method {
     DELETE = 'DELETE',
 }
 
+export function methodCanContainBody(method: Method) {
+    return [Method.POST, Method.PATCH, Method.PUT].includes(method);
+}
+
+export function methodWithoutEffects(method: Method) {
+    return [Method.HEAD, Method.GET].includes(method);
+}
+
 export type Endpoint<R, V, P = unknown> = Readonly<{
     _?: V; // Temporary hack to extract the type of variables. Do not use it in real endpoints.
     method: Method;
