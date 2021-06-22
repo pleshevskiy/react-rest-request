@@ -3,7 +3,7 @@ import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
 import { useClient } from './client_hook';
 import { AnyEndpoint, ExtractEndpointParams, ExtractEndpointResponse, ExtractEndpointVariables, methodWithoutEffects } from './endpoint';
-import { PublicRequestState, RequestReducer, requestReducer } from './reducer';
+import { INITIAL_REQUEST_STATE, PublicRequestState, RequestReducer, requestReducer } from './reducer';
 import { useRequestContext } from './request_context';
 import { ClientResponse } from './client';
 import { isFunction } from './misc';
@@ -38,6 +38,7 @@ extends
 {
     readonly refetch: () => void,
     readonly cancel: () => void,
+    readonly clearStore: () => void,
 };
 
 export function useLazyRequest<E extends AnyEndpoint>(
@@ -48,11 +49,7 @@ export function useLazyRequest<E extends AnyEndpoint>(
     const { defaultHeaders } = useRequestContext();
     const [state, dispatch] = React.useReducer<RequestReducer<ExtractEndpointResponse<E>>>(
         requestReducer,
-        {
-            data: null,
-            loading: false,
-            isCalled: false,
-        }
+        INITIAL_REQUEST_STATE,
     );
     const [prevHandlerConfig, setPrevHandlerConfig] = React.useState<LazyRequestHandlerConfig<E> | null>(null);
 
@@ -165,6 +162,10 @@ export function useLazyRequest<E extends AnyEndpoint>(
         abortControllerRef.current = new AbortController();
     }, []);
 
+    const clearRequestStore = React.useCallback(() => {
+        dispatch({ type: 'clearStore' });
+    }, []);
+
     React.useEffect(
         () => cancelRequest,
         [cancelRequest]
@@ -180,6 +181,7 @@ export function useLazyRequest<E extends AnyEndpoint>(
             fetchError: state.fetchError,
             refetch: refetchRequest,
             cancel: cancelRequest,
+            clearStore: clearRequestStore
         },
     ];
 }

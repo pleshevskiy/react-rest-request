@@ -12,13 +12,13 @@ export interface RequestProps<R> extends PrepareRequestProps {
     readonly transformResponseData?: (data: unknown) => R;
     readonly abortSignal: AbortSignal;
 }
-export declare type ResponseWithError = Pick<Response, 'ok' | 'redirected' | 'status' | 'statusText' | 'type' | 'headers' | 'url'> & Readonly<{
-    error?: Error;
-    canceled?: boolean;
-}>;
-export declare type ClientResponse<Data extends Record<string, any>> = ResponseWithError & Readonly<{
-    data: Data;
-}>;
+export interface ResponseWithError extends Pick<Response, 'ok' | 'redirected' | 'status' | 'statusText' | 'type' | 'headers' | 'url'> {
+    readonly error?: Error;
+    readonly canceled?: boolean;
+}
+export interface ClientResponse<Data extends Record<string, any>> extends ResponseWithError {
+    readonly data: Data;
+}
 export declare class Client {
     private readonly config;
     constructor(config: ClientConfig);

@@ -10,7 +10,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 import invariant from 'tiny-invariant';
-import { Method } from './endpoint';
+import { methodCanContainBody } from './endpoint';
 import { formDataFromObject, isFunction, urlSearchParamsFromObject } from './misc';
 export class Client {
     constructor(config) {
@@ -18,7 +18,7 @@ export class Client {
     }
     prepareRequest(props) {
         var _a;
-        const requestCanContainBody = [Method.POST, Method.PATCH, Method.PUT].includes(props.method);
+        const requestCanContainBody = methodCanContainBody(props.method);
         const defaultBaseUrl = (_a = window) === null || _a === void 0 ? void 0 : _a.location.href;
         const sourceUrl = /https?:\/\//.test(props.url) ?
             props.url

@@ -33,8 +33,23 @@ export type RequestAction<R> =
     | {
         type: 'cancel'
     }
+    | {
+        type: 'clearStore'
+    }
 
 export type RequestReducer<R> = React.Reducer<RequestState<R>, RequestAction<R>>
+
+export const INITIAL_REQUEST_STATE: RequestState<any> = {
+    data: null,
+    response: undefined,
+    fetchError: undefined,
+    isCanceled: false,
+    loading: false,
+    isCalled: false,
+    prevHeaders: undefined,
+    prevVariables: undefined,
+    prevParams: undefined,
+};
 
 export function requestReducer<R>(state: RequestState<R>, action: RequestAction<R>): RequestState<R> {
     switch (action.type) {
@@ -76,5 +91,9 @@ export function requestReducer<R>(state: RequestState<R>, action: RequestAction<
                 fetchError: undefined,
             };
         }
+        case 'clearStore': {
+            return INITIAL_REQUEST_STATE;
+        }
     }
 }
+

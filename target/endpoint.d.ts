@@ -6,6 +6,8 @@ export declare enum Method {
     PATCH = "PATCH",
     DELETE = "DELETE"
 }
+export declare function methodCanContainBody(method: Method): boolean;
+export declare function methodWithoutEffects(method: Method): boolean;
 export declare type Endpoint<R, V, P = unknown> = Readonly<{
     _?: V;
     method: Method;

@@ -2,17 +2,15 @@ import React from 'react';
 import invariant from 'tiny-invariant';
 import isEqual from 'lodash.isequal';
 import { useClient } from './client_hook';
-import { requestReducer } from './reducer';
+import { methodWithoutEffects } from './endpoint';
+import { INITIAL_REQUEST_STATE, requestReducer } from './reducer';
 import { useRequestContext } from './request_context';
 import { isFunction } from './misc';
+;
 export function useLazyRequest(endpoint, config) {
     const [client] = useClient();
     const { defaultHeaders } = useRequestContext();
-    const [state, dispatch] = React.useReducer(requestReducer, {
-        data: null,
-        loading: false,
-        isCalled: false,
-    });
+    const [state, dispatch] = React.useReducer(requestReducer, INITIAL_REQUEST_STATE);
     const [prevHandlerConfig, setPrevHandlerConfig] = React.useState(null);
     const abortControllerRef = React.useRef(new AbortController());
     const transformResponseData = React.useCallback((data) => {
@@ -39,11 +37,13 @@ export function useLazyRequest(endpoint, config) {
         }
         const variables = Object.assign(Object.assign({}, config === null || config === void 0 ? void 0 : config.variables), handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.variables);
         const headers = Object.assign(Object.assign(Object.assign(Object.assign({}, defaultHeaders), endpoint.headers), config === null || config === void 0 ? void 0 : config.headers), handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.headers);
-        if (state.isCalled
+        const shouldReturnCachedValue = (methodWithoutEffects(endpoint.method)
+            && state.isCalled
             && isSameRequest
             && (state === null || state === void 0 ? void 0 : state.prevVariables) && isEqual(state.prevVariables, variables)
             && (state === null || state === void 0 ? void 0 : state.prevHeaders) && isEqual(state.prevHeaders, headers)
-            && (handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.force) === false) {
+            && !(handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.force));
+        if (shouldReturnCachedValue) {
             return Promise.resolve(state.data);
         }
         const onCompletes = [config === null || config === void 0 ? void 0 : config.onComplete, handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onComplete].filter(isFunction);
@@ -68,13 +68,16 @@ export function useLazyRequest(endpoint, config) {
     }, [state, config, client, endpoint, defaultHeaders, transformResponseData]);
     const refetchRequest = React.useCallback(() => {
         if (prevHandlerConfig != null) {
-            handler(Object.assign(Object.assign({}, prevHandlerConfig), { force: true }));
+            handler(Object.assign({}, prevHandlerConfig));
         }
     }, [handler, prevHandlerConfig]);
     const cancelRequest = React.useCallback(() => {
         dispatch({ type: 'cancel' });
         abortControllerRef.current.abort();
         abortControllerRef.current = new AbortController();
+    }, []);
+    const clearRequestStore = React.useCallback(() => {
+        dispatch({ type: 'clearStore' });
     }, []);
     React.useEffect(() => cancelRequest, [cancelRequest]);
     return [
@@ -87,6 +90,7 @@ export function useLazyRequest(endpoint, config) {
             fetchError: state.fetchError,
             refetch: refetchRequest,
             cancel: cancelRequest,
+            clearStore: clearRequestStore
         },
     ];
 }
