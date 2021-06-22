@@ -14,6 +14,7 @@ export function useLazyRequest(endpoint, config) {
         isCalled: false,
     });
     const [prevHandlerConfig, setPrevHandlerConfig] = React.useState(null);
+    const abortControllerRef = React.useRef(new AbortController());
     const transformResponseData = React.useCallback((data) => {
         return isFunction(endpoint.transformResponseData) ?
             endpoint.transformResponseData(data)
@@ -50,7 +51,7 @@ export function useLazyRequest(endpoint, config) {
         dispatch({ type: 'call', headers, variables, params });
         setPrevHandlerConfig(handlerConfig !== null && handlerConfig !== void 0 ? handlerConfig : {});
         return client
-            .request(Object.assign(Object.assign({}, endpoint), { url: endpointUrl, headers,
+            .request(Object.assign(Object.assign({}, endpoint), { abortSignal: abortControllerRef.current.signal, url: endpointUrl, headers,
             variables,
             transformResponseData }))
             .then((response) => {
@@ -65,17 +66,17 @@ export function useLazyRequest(endpoint, config) {
             return null;
         });
     }, [state, config, client, endpoint, defaultHeaders, transformResponseData]);
-    const refetch = React.useCallback(() => {
+    const refetchRequest = React.useCallback(() => {
         if (prevHandlerConfig != null) {
             handler(Object.assign(Object.assign({}, prevHandlerConfig), { force: true }));
         }
     }, [handler, prevHandlerConfig]);
-    React.useEffect(() => {
-        return () => {
-            dispatch({ type: 'cancel' });
-            client.cancelRequest();
-        };
-    }, [client]);
+    const cancelRequest = React.useCallback(() => {
+        dispatch({ type: 'cancel' });
+        abortControllerRef.current.abort();
+        abortControllerRef.current = new AbortController();
+    }, []);
+    React.useEffect(() => cancelRequest, [cancelRequest]);
     return [
         handler,
         {
@@ -84,8 +85,8 @@ export function useLazyRequest(endpoint, config) {
             isCalled: state.isCalled,
             isCanceled: state.isCanceled,
             fetchError: state.fetchError,
-            refetch,
-            cancel: client.cancelRequest.bind(client),
+            refetch: refetchRequest,
+            cancel: cancelRequest,
         },
     ];
 }
