@@ -1,1 +1,1 @@
-export declare function useClient(): import("./client").Client[];
+export declare function useClient(): readonly [import("./client").Client];

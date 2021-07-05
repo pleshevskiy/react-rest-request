@@ -1,10 +1,15 @@
-export function isObject(val) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.urlSearchParamsFromObject = exports.formDataFromObject = exports.isFunction = exports.isObject = void 0;
+function isObject(val) {
     return Object.prototype.toString.call(val) === '[object Object]';
 }
-export function isFunction(val) {
+exports.isObject = isObject;
+function isFunction(val) {
     return typeof val === 'function';
 }
-export function formDataFromObject(obj) {
+exports.isFunction = isFunction;
+function formDataFromObject(obj) {
     const formData = new FormData();
     Object.entries(obj)
         .filter(([_, value]) => value !== undefined)
@@ -23,7 +28,8 @@ export function formDataFromObject(obj) {
     });
     return formData;
 }
-export function urlSearchParamsFromObject(obj) {
+exports.formDataFromObject = formDataFromObject;
+function urlSearchParamsFromObject(obj) {
     const searchParams = new URLSearchParams();
     Object.entries(obj)
         .filter(([_, value]) => value !== undefined)
@@ -40,3 +46,4 @@ export function urlSearchParamsFromObject(obj) {
     });
     return searchParams;
 }
+exports.urlSearchParamsFromObject = urlSearchParamsFromObject;

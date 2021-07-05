@@ -2,7 +2,7 @@
     "compilerOptions": {
         "rootDir": "src",
         "outDir": "target",
-        "module": "esnext",
+        "module": "commonjs",
         "target": "es6",
         "lib": ["dom", "es2020"],
         "jsx": "react",

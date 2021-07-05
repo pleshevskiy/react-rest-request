@@ -1,24 +1,27 @@
-import React from 'react';
-import invariant from 'tiny-invariant';
-import isEqual from 'lodash.isequal';
-import { useClient } from './client_hook';
-import { methodWithoutEffects } from './endpoint';
-import { INITIAL_REQUEST_STATE, requestReducer } from './reducer';
-import { useRequestContext } from './request_context';
-import { isFunction } from './misc';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.useLazyRequest = void 0;
+const react_1 = require("react");
+const tiny_invariant_1 = require("tiny-invariant");
+const lodash_isequal_1 = require("lodash.isequal");
+const client_hook_1 = require("./client_hook");
+const endpoint_1 = require("./endpoint");
+const reducer_1 = require("./reducer");
+const request_context_1 = require("./request_context");
+const misc_1 = require("./misc");
 ;
-export function useLazyRequest(endpoint, config) {
-    const [client] = useClient();
-    const { defaultHeaders } = useRequestContext();
-    const [state, dispatch] = React.useReducer(requestReducer, INITIAL_REQUEST_STATE);
-    const [prevHandlerConfig, setPrevHandlerConfig] = React.useState(null);
-    const abortControllerRef = React.useRef(new AbortController());
-    const transformResponseData = React.useCallback((data) => {
-        return isFunction(endpoint.transformResponseData) ?
+function useLazyRequest(endpoint, config) {
+    const [client] = client_hook_1.useClient();
+    const { defaultHeaders } = request_context_1.useRequestContext();
+    const [state, dispatch] = react_1.default.useReducer(reducer_1.requestReducer, reducer_1.INITIAL_REQUEST_STATE);
+    const [prevHandlerConfig, setPrevHandlerConfig] = react_1.default.useState(null);
+    const abortControllerRef = react_1.default.useRef(new AbortController());
+    const transformResponseData = react_1.default.useCallback((data) => {
+        return misc_1.isFunction(endpoint.transformResponseData) ?
             endpoint.transformResponseData(data)
             : data;
     }, [endpoint]);
-    const handler = React.useCallback((handlerConfig) => {
+    const handler = react_1.default.useCallback((handlerConfig) => {
         var _a;
         if ((state === null || state === void 0 ? void 0 : state.loading) || (state === null || state === void 0 ? void 0 : state.isCanceled)) {
             return Promise.resolve(null);
@@ -26,28 +29,28 @@ export function useLazyRequest(endpoint, config) {
         let params;
         let endpointUrl;
         let isSameRequest = true;
-        if (isFunction(endpoint.url)) {
+        if (misc_1.isFunction(endpoint.url)) {
             params = (_a = handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.params) !== null && _a !== void 0 ? _a : config === null || config === void 0 ? void 0 : config.params;
-            invariant(params, 'Endpoint required params');
+            tiny_invariant_1.default(params, 'Endpoint required params');
             endpointUrl = endpoint.url(params);
-            isSameRequest = !!(state === null || state === void 0 ? void 0 : state.prevParams) && isEqual(state.prevParams, params);
+            isSameRequest = !!(state === null || state === void 0 ? void 0 : state.prevParams) && lodash_isequal_1.default(state.prevParams, params);
         }
         else {
             endpointUrl = endpoint.url;
         }
         const variables = Object.assign(Object.assign({}, config === null || config === void 0 ? void 0 : config.variables), handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.variables);
         const headers = Object.assign(Object.assign(Object.assign(Object.assign({}, defaultHeaders), endpoint.headers), config === null || config === void 0 ? void 0 : config.headers), handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.headers);
-        const shouldReturnCachedValue = (methodWithoutEffects(endpoint.method)
+        const shouldReturnCachedValue = (endpoint_1.methodWithoutEffects(endpoint.method)
             && state.isCalled
             && isSameRequest
-            && (state === null || state === void 0 ? void 0 : state.prevVariables) && isEqual(state.prevVariables, variables)
-            && (state === null || state === void 0 ? void 0 : state.prevHeaders) && isEqual(state.prevHeaders, headers)
+            && (state === null || state === void 0 ? void 0 : state.prevVariables) && lodash_isequal_1.default(state.prevVariables, variables)
+            && (state === null || state === void 0 ? void 0 : state.prevHeaders) && lodash_isequal_1.default(state.prevHeaders, headers)
             && !(handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.force));
         if (shouldReturnCachedValue) {
             return Promise.resolve(state.data);
         }
-        const onCompletes = [config === null || config === void 0 ? void 0 : config.onComplete, handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onComplete].filter(isFunction);
-        const onFailures = [config === null || config === void 0 ? void 0 : config.onFailure, handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onFailure].filter(isFunction);
+        const onCompletes = [config === null || config === void 0 ? void 0 : config.onComplete, handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onComplete].filter(misc_1.isFunction);
+        const onFailures = [config === null || config === void 0 ? void 0 : config.onFailure, handlerConfig === null || handlerConfig === void 0 ? void 0 : handlerConfig.onFailure].filter(misc_1.isFunction);
         dispatch({ type: 'call', headers, variables, params });
         setPrevHandlerConfig(handlerConfig !== null && handlerConfig !== void 0 ? handlerConfig : {});
         return client
@@ -66,20 +69,20 @@ export function useLazyRequest(endpoint, config) {
             return null;
         });
     }, [state, config, client, endpoint, defaultHeaders, transformResponseData]);
-    const refetchRequest = React.useCallback(() => {
+    const refetchRequest = react_1.default.useCallback(() => {
         if (prevHandlerConfig != null) {
             handler(Object.assign({}, prevHandlerConfig));
         }
     }, [handler, prevHandlerConfig]);
-    const cancelRequest = React.useCallback(() => {
+    const cancelRequest = react_1.default.useCallback(() => {
         dispatch({ type: 'cancel' });
         abortControllerRef.current.abort();
         abortControllerRef.current = new AbortController();
     }, []);
-    const clearRequestStore = React.useCallback(() => {
+    const clearRequestStore = react_1.default.useCallback(() => {
         dispatch({ type: 'clearStore' });
     }, []);
-    React.useEffect(() => cancelRequest, [cancelRequest]);
+    react_1.default.useEffect(() => cancelRequest, [cancelRequest]);
     return [
         handler,
         {
@@ -94,3 +97,4 @@ export function useLazyRequest(endpoint, config) {
         },
     ];
 }
+exports.useLazyRequest = useLazyRequest;

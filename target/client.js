@@ -1,3 +1,4 @@
+"use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
@@ -9,16 +10,18 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-import invariant from 'tiny-invariant';
-import { methodCanContainBody } from './endpoint';
-import { formDataFromObject, isFunction, urlSearchParamsFromObject } from './misc';
-export class Client {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Client = void 0;
+const tiny_invariant_1 = require("tiny-invariant");
+const endpoint_1 = require("./endpoint");
+const misc_1 = require("./misc");
+class Client {
     constructor(config) {
         this.config = config;
     }
     prepareRequest(props) {
         var _a;
-        const requestCanContainBody = methodCanContainBody(props.method);
+        const requestCanContainBody = endpoint_1.methodCanContainBody(props.method);
         const defaultBaseUrl = (_a = window) === null || _a === void 0 ? void 0 : _a.location.href;
         const sourceUrl = /https?:\/\//.test(props.url) ?
             props.url
@@ -28,15 +31,15 @@ export class Client {
         }
         const url = new URL(sourceUrl, defaultBaseUrl);
         if (!requestCanContainBody) {
-            invariant(!(props.variables instanceof FormData), `Method ${props.method} cannot contain body`);
-            url.search = urlSearchParamsFromObject(props.variables).toString();
+            tiny_invariant_1.default(!(props.variables instanceof FormData), `Method ${props.method} cannot contain body`);
+            url.search = misc_1.urlSearchParamsFromObject(props.variables).toString();
         }
         const headers = new Headers(props.headers);
         if (requestCanContainBody && !headers.has('content-type')) {
             headers.set('content-type', 'application/json');
         }
         const contentType = headers.get('content-type');
-        const body = !requestCanContainBody ? (undefined) : contentType === 'application/json' ? (JSON.stringify(props.variables)) : contentType === 'multipart/form-data' ? (props.variables instanceof FormData ? (props.variables) : (formDataFromObject(props.variables))) : (
+        const body = !requestCanContainBody ? (undefined) : contentType === 'application/json' ? (JSON.stringify(props.variables)) : contentType === 'multipart/form-data' ? (props.variables instanceof FormData ? (props.variables) : (misc_1.formDataFromObject(props.variables))) : (
         /* TODO: need to add more content-type of body */
         undefined);
         return new Request(url.toString(), {
@@ -78,7 +81,7 @@ export class Client {
                 url: res.url,
                 error: 'error' in res ? res.error : undefined,
                 canceled: 'canceled' in res ? res.canceled : false,
-                data: isFunction(transformResponseData) ? transformResponseData(data) : data,
+                data: misc_1.isFunction(transformResponseData) ? transformResponseData(data) : data,
             };
         })
             .then((res) => {
@@ -89,3 +92,4 @@ export class Client {
         });
     }
 }
+exports.Client = Client;
